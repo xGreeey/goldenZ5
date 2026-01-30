@@ -1,0 +1,16 @@
+/**
+ * =============================================================================
+ * HR ADMIN — MAIN STYLESHEET (Entry point)
+ * =============================================================================
+ * CONVENTION: All styles in .css files only. No inline style= in HTML.
+ * Import order: variables → layout → sidebar → main → components → responsive.
+ * Link this file only: <link href=".../hr-admin.css" rel="stylesheet">
+ * =============================================================================
+ */
+
+@import url('variables.css');
+@import url('layout.css');
+@import url('sidebar.css');
+@import url('main.css');
+@import url('components.css');
+@import url('responsive.css');

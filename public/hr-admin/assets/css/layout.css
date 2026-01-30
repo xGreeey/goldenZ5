@@ -1,0 +1,31 @@
+/**
+ * =============================================================================
+ * HR ADMIN — LAYOUT (App shell, body, flex container)
+ * =============================================================================
+ * Base layout: .hr-admin-body wraps .hr-admin-app (sidebar + main).
+ * Sidebar and main content styles are in sidebar.css and main.css.
+ * =============================================================================
+ */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* --- Body (page root) --- */
+.hr-admin-body {
+    margin: 0;
+    font-family: var(--hr-font);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--hr-text);
+    background: var(--hr-bg-body);
+    min-height: 100vh;
+}
+
+/* --- App wrapper (sidebar + main) --- */
+.hr-admin-app {
+    display: flex;
+    min-height: 100vh;
+}
