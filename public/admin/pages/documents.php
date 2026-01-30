@@ -280,7 +280,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['document_upload'])) {
                                 <td><?php echo $doc['file_size'] ? number_format($doc['file_size'] / 1024, 1) . ' KB' : '—'; ?></td>
                                 <td><?php echo date('M j, Y', strtotime($doc['created_at'])); ?></td>
                                 <td>
-                                    <a href="<?php echo htmlspecialchars($base_url); ?>/document-download.php?id=<?php echo (int)$doc['id']; ?>" class="portal-btn portal-btn-ghost portal-btn-sm">Download</a>
+                                    <a href="<?php echo htmlspecialchars($base_url); ?>/document-download?id=<?php echo (int)$doc['id']; ?>" class="portal-btn portal-btn-ghost portal-btn-sm">Download</a>
                                     <form method="post" action="" class="portal-inline-form" onsubmit="return confirm('Delete this document?');">
                                         <input type="hidden" name="document_delete" value="1">
                                         <input type="hidden" name="document_id" value="<?php echo (int)$doc['id']; ?>">

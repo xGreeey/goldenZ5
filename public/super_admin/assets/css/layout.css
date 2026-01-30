@@ -1,0 +1,37 @@
+/**
+ * =============================================================================
+ * PORTAL — LAYOUT (App shell, body, flex container)
+ * =============================================================================
+ * Base layout: .portal-body wraps .portal-app (sidebar + main).
+ * Sidebar and main content styles are in sidebar.css and main.css.
+ * =============================================================================
+ */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* --- Body (page root) --- */
+.portal-body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--hr-font);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--hr-text);
+    background: var(--hr-bg-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* --- App wrapper (sidebar + main) --- */
+.portal-app {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    max-width: 100vw;
+    position: relative;
+    overflow-x: hidden;
+}

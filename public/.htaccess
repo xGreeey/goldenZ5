@@ -17,12 +17,10 @@ DirectoryIndex index.php
     RewriteRule ^$ index.php [L]
 
     # Redirect URLs with .php extension to clean URLs (without .php)
-    # Exclude root index.php (needed for logout handling)
     # Exclude api/ directory (API endpoints need .php extension)
     RewriteCond %{THE_REQUEST} \s/+(.+?)\.php(\?[^\s]*)?\s [NC]
-    RewriteCond %{REQUEST_URI} !^/index\.php$ [NC]
     RewriteCond %{REQUEST_URI} !^/api/ [NC]
-    RewriteRule ^(.*)\.php$ /$1 [R=302,L,QSA]
+    RewriteRule ^(.*)\.php$ /$1 [R=301,L,QSA]
 
     # Admin (administration, evaluation & assessments) clean routes
     RewriteRule ^admin/?$ admin/index.php [L]
@@ -32,13 +30,18 @@ DirectoryIndex index.php
     RewriteRule ^hr/?$ hr/index.php [L]
     RewriteRule ^hr/([^/]+)/?$ hr/index.php?page=$1 [L,QSA]
 
-    # SUPER ADMIN clean routes
-    RewriteRule ^super-admin/?$ super-admin/index.php [L]
-    RewriteRule ^super-admin/([^/]+)/?$ super-admin/index.php?page=$1 [L,QSA]
+    # SUPER ADMIN clean routes (folder may be super_admin with underscore)
+    RewriteRule ^super-admin/?$ super_admin/index.php [L]
+    RewriteRule ^super-admin/([^/]+)/?$ super_admin/index.php?page=$1 [L,QSA]
+    RewriteRule ^super_admin/?$ super_admin/index.php [L]
+    RewriteRule ^super_admin/([^/]+)/?$ super_admin/index.php?page=$1 [L,QSA]
 
     # HUMAN RESOURCE clean routes (hr, hr_admin, employee, etc.)
     RewriteRule ^human-resource/?$ human-resource/index.php [L]
     RewriteRule ^human-resource/([^/]+)/?$ human-resource/index.php?page=$1 [L,QSA]
+
+    # FORGOT PASSWORD route
+    RewriteRule ^forgot-password/?$ forgot-password/forgot-password.php [L]
 
     # Add .php extension internally for clean URLs
     RewriteCond %{REQUEST_FILENAME} !-f
