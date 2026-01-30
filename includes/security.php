@@ -3,26 +3,23 @@
 declare(strict_types=1);
 
 /**
- * CSRF and security helpers. Session must be started before using.
- * PHP 7.4+ compatible. Server-stored token (double-submit not used).
+ * CSRF and security helpers — thin wrapper around app/middleware and file logging.
+ * Session must be started before using. Load app/middleware/CsrfMiddleware.php before this file
+ * when using csrf_token / csrf_field / csrf_validate / csrf_rotate.
  */
 
 if (!function_exists('csrf_token')) {
-    /**
-     * Generate and store a CSRF token in session (32 bytes). Returns existing token if present.
-     */
     function csrf_token(): string
     {
-        if (empty($_SESSION['_csrf_token'])) {
-            $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
-        }
-        return $_SESSION['_csrf_token'];
+        $appRoot = dirname(__DIR__);
+        require_once $appRoot . '/app/middleware/CsrfMiddleware.php';
+        return CsrfMiddleware::token();
     }
 }
 
 if (!function_exists('csrf_field')) {
     /**
-     * Return HTML hidden input for CSRF token (for forms).
+     * Return HTML hidden input for CSRF token (use in every form).
      */
     function csrf_field(): string
     {
@@ -33,32 +30,51 @@ if (!function_exists('csrf_field')) {
 
 if (!function_exists('csrf_validate')) {
     /**
-     * Validate request token against session token (header X-CSRF-Token or body csrf_token).
-     * Returns true if valid, false otherwise. Use hash_equals to prevent timing attacks.
+     * Validate request token (POST/PUT/PATCH/DELETE). Returns true if valid.
+     * On invalid, use CsrfMiddleware::reject() or respond with 419/error in caller.
      */
     function csrf_validate(): bool
     {
-        $sessionToken = $_SESSION['_csrf_token'] ?? '';
-        if ($sessionToken === '') {
-            return false;
-        }
-        $requestToken = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
-        if ($requestToken === '') {
-            return false;
-        }
-        return hash_equals($sessionToken, $requestToken);
+        $appRoot = dirname(__DIR__);
+        require_once $appRoot . '/app/middleware/CsrfMiddleware.php';
+        return CsrfMiddleware::verify();
     }
 }
 
 if (!function_exists('csrf_rotate')) {
-    /**
-     * Regenerate CSRF token after successful state-changing request (recommended).
-     */
     function csrf_rotate(): void
     {
-        $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
+        $appRoot = dirname(__DIR__);
+        require_once $appRoot . '/app/middleware/CsrfMiddleware.php';
+        CsrfMiddleware::rotate();
     }
 }
 
-// CSP nonce: generate per-request in the entry script (e.g. $cspNonce = base64_encode(random_bytes(16)))
-// and use the same value in Content-Security-Policy and in <script nonce="...">.
+if (!function_exists('log_security_event')) {
+    /**
+     * Append one JSON line to storage/logs/security.log.
+     *
+     * @param string $action Event name (e.g. "Login Success", "Document Download").
+     * @param array|string $meta Optional details; if string, stored as ['details' => $meta].
+     */
+    function log_security_event(string $action, $meta = []): void
+    {
+        if (is_string($meta)) {
+            $meta = ['details' => $meta];
+        }
+        $appRoot = dirname(__DIR__);
+        $logDir = $appRoot . '/storage/logs';
+        if (!is_dir($logDir)) {
+            @mkdir($logDir, 0755, true);
+        }
+        $logFile = $logDir . '/security.log';
+        $line = json_encode([
+            'time'   => date('Y-m-d\TH:i:s\Z'),
+            'action' => $action,
+            'meta'   => $meta,
+            'ip'     => $_SERVER['REMOTE_ADDR'] ?? null,
+            'user_id' => $_SESSION['user_id'] ?? null,
+        ]) . "\n";
+        @file_put_contents($logFile, $line, FILE_APPEND | LOCK_EX);
+    }
+}

@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin — document download. Admin roles only.
+ * Admin portal — document download. Roles from users.role enum: super_admin, admin, accounting, operation, logistics, employee.
  * Call: /admin/document-download.php?id=<employee_documents.id>
  */
 declare(strict_types=1);
@@ -8,22 +8,17 @@ declare(strict_types=1);
 $appRoot = dirname(__DIR__, 2);
 $storageRoot = $appRoot . '/storage';
 
-if (session_status() === PHP_SESSION_NONE) {
-    $sessionPath = $storageRoot . '/sessions';
-    if (is_dir($sessionPath) || @mkdir($sessionPath, 0755, true)) {
-        session_save_path($sessionPath);
-    }
-    session_start();
+if (is_file($appRoot . '/bootstrap/app.php')) {
+    require_once $appRoot . '/bootstrap/app.php';
 }
+require_once $appRoot . '/app/middleware/SessionMiddleware.php';
+require_once $appRoot . '/app/middleware/AuthMiddleware.php';
+require_once $appRoot . '/app/middleware/RoleMiddleware.php';
 
-$allowed_roles = ['super_admin', 'hr_admin', 'hr', 'admin', 'accounting', 'operation', 'logistics', 'employee'];
-if (empty($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || !isset($_SESSION['user_role']) ||
-    !in_array($_SESSION['user_role'], $allowed_roles, true)) {
-    http_response_code(403);
-    header('Content-Type: text/plain');
-    echo 'Forbidden';
-    exit;
-}
+SessionMiddleware::handle();
+AuthMiddleware::check();
+// Only admin role can access admin portal (humanresource uses /human-resource/document-download.php)
+RoleMiddleware::requireRole(['admin']);
 
 $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 if ($id <= 0) {

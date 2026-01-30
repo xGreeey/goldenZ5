@@ -27,8 +27,14 @@ A PHP-based web application for workforce administration, employee records, docu
 ```
 .
 ├── app/
+│   ├── middleware/               # Reusable middleware (Session, Auth, Role, CSRF, RateLimit)
+│   │   ├── SessionMiddleware.php
+│   │   ├── AuthMiddleware.php
+│   │   ├── RoleMiddleware.php
+│   │   ├── CsrfMiddleware.php
+│   │   └── RateLimitMiddleware.php
 │   └── services/
-│       └── storage.php          # Storage / file helpers
+│       └── storage.php          # Storage / file helpers, storage_resolve_document_by_id()
 ├── bootstrap/
 │   └── app.php                 # Load .env into $_ENV
 ├── config/
@@ -58,7 +64,8 @@ A PHP-based web application for workforce administration, employee records, docu
 │       └── assets/             # HR portal CSS & JS
 ├── storage/
 │   ├── backups/                # Local backup output (optional)
-│   ├── logs/                   # Application & backup logs
+│   ├── cache/                  # Rate limit data (ratelimit.json)
+│   ├── logs/                   # Application, backup, security.log
 │   └── sessions/               # PHP session files
 ├── .gitignore
 ├── LICENSE                     # EULA (Golden Z-5)
@@ -108,6 +115,44 @@ A PHP-based web application for workforce administration, employee records, docu
 
 - DB is often initialized via `mysql-init.sql` in the project root.
 - Cron backup: see `cron/README.md` for backup-to-MinIO setup.
+
+## Middleware & Security
+
+### Protecting forms (CSRF)
+
+Include the CSRF token in every form that submits via POST/PUT/PATCH/DELETE:
+
+```php
+<?= csrf_field() ?>
+```
+
+Or output a hidden input manually: `name="csrf_token"` or `name="_csrf"` with value from `csrf_token()`. Validate in the handler with `csrf_validate()`; on failure call `CsrfMiddleware::reject()` or return 419/error.
+
+### Securing new endpoints
+
+Run middleware in this order for protected routes:
+
+1. **Session** — `SessionMiddleware::handle()` (starts session from config, enforces idle/absolute timeout).
+2. **Auth** — `AuthMiddleware::check()` (redirects or 401 if not logged in); use `AuthMiddleware::user()` for current user.
+3. **Role** — `RoleMiddleware::requireRole($roles)` (string or array; case-insensitive; 403 or "Access denied" on failure).
+4. **CSRF** — For POST/PUT/PATCH/DELETE, call `CsrfMiddleware::verify()` and `CsrfMiddleware::reject()` if false.
+
+Example (protected HR page):
+
+```php
+require_once $appRoot . '/app/middleware/SessionMiddleware.php';
+require_once $appRoot . '/app/middleware/AuthMiddleware.php';
+require_once $appRoot . '/app/middleware/RoleMiddleware.php';
+require_once $appRoot . '/app/middleware/CsrfMiddleware.php';
+SessionMiddleware::handle();
+AuthMiddleware::check();
+RoleMiddleware::requireRole(['hr_admin', 'hr', 'super_admin']);
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && !CsrfMiddleware::verify()) {
+    CsrfMiddleware::reject();
+}
+```
+
+Login throttling is applied in `public/index.php` via `RateLimitMiddleware::checkLogin($username)`, `recordFail($username)`, and `clear($username)` on success.
 
 ## Human Resource Portal
 

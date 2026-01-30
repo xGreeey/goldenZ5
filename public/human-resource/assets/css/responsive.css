@@ -1,0 +1,107 @@
+/**
+ * =============================================================================
+ * PORTAL — RESPONSIVE (Breakpoints)
+ * =============================================================================
+ * 1024px: Sidebar off-canvas, overlay, mobile menu btn visible.
+ * 640px: Single-column cards, tighter table.
+ * =============================================================================
+ */
+
+@media (max-width: 1024px) {
+    /* --- Sidebar: slide off-screen; .open brings it in --- */
+    .portal-sidebar {
+        transform: translateX(-100%);
+    }
+
+    .portal-sidebar.open {
+        transform: translateX(0);
+    }
+
+    .portal-sidebar-overlay.visible {
+        display: block;
+    }
+
+    /* --- Main: full width (no sidebar margin) --- */
+    .portal-main {
+        margin-left: 0;
+    }
+
+    .sidebar-collapsed .portal-main {
+        margin-left: 0;
+    }
+
+    .portal-main-header {
+        padding: 0 16px;
+    }
+
+    /* --- Floating mobile menu button (opens sidebar) --- */
+    .portal-mobile-menu-fab {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        bottom: 24px;
+        left: 24px;
+        z-index: 98;
+        width: 56px;
+        height: 56px;
+        border: none;
+        border-radius: 50%;
+        background: var(--hr-primary);
+        color: #fff;
+        font-size: 20px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .portal-mobile-menu-fab:hover {
+        opacity: 0.95;
+    }
+
+    .portal-mobile-menu-fab:focus-visible {
+        outline: 2px solid var(--hr-primary);
+        outline-offset: 3px;
+    }
+
+    .portal-main-content {
+        padding: 16px;
+    }
+
+    .portal-page-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .portal-pill-tabs {
+        width: 100%;
+    }
+
+    .portal-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .portal-search-wrap {
+        max-width: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .portal-main-header {
+        padding: 0 12px;
+    }
+
+    .portal-main-content {
+        padding: 12px;
+    }
+
+    .portal-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .portal-table th,
+    .portal-table td {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+}

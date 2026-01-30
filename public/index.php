@@ -17,10 +17,11 @@
  *    - Updates password_changed_at timestamp
  *    - Auto-logs user in after password change
  * 
- * 3. ROLE-BASED DASHBOARD ACCESS:
- *    - developer → ../developer/index.php
- *    - hr_admin, admin, accounting, operation, logistics → /admin (Administration, Evaluation & Assessments)
- *    - hr → /hr (Hiring)
+ * 3. ROLE-BASED DASHBOARD ACCESS (matches users.role enum in goldenz_hr.sql):
+ *    - super_admin → /super-admin/dashboard
+ *    - humanresource → /human-resource (Human Resource portal; only this role can access it)
+ *    - admin → /admin (Administration portal; only this role can access it)
+ *    - developer → /developer/dashboard
  *    - Sets session variables: user_id, user_role, username, name, employee_id, department
  * 
  * 4. SECURITY & AUDIT:
@@ -43,9 +44,18 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 ini_set('log_errors', 1);
 
+$appRoot = __DIR__ . '/..';
 
-// Start session first (before any output) — secure params in config/session.php
-require_once __DIR__ . '/../config/session.php';
+// Bootstrap (load .env) — before any output
+if (is_file($appRoot . '/bootstrap/app.php')) {
+    require_once $appRoot . '/bootstrap/app.php';
+}
+
+// Middleware: session first (uses config/session.php, enforces idle/absolute timeout)
+require_once $appRoot . '/app/middleware/SessionMiddleware.php';
+require_once $appRoot . '/app/middleware/CsrfMiddleware.php';
+require_once $appRoot . '/app/middleware/RateLimitMiddleware.php';
+SessionMiddleware::handle();
 
 // Per-request CSP nonce (used in CSP header and in inline <script nonce="...">)
 $cspNonce = base64_encode(random_bytes(16));
@@ -74,22 +84,9 @@ $cspLines = [
 ];
 header('Content-Security-Policy: ' . implode('; ', $cspLines));
 
-// Bootstrap application (with error handling)
-try {
-    if (file_exists(__DIR__ . '/../bootstrap/app.php')) {
-        require_once __DIR__ . '/../bootstrap/app.php';
-    } else {
-        // Fallback if bootstrap doesn't exist
-        require_once __DIR__ . '/../bootstrap/autoload.php';
-    }
-} catch (Exception $e) {
-    error_log('Bootstrap error: ' . $e->getMessage());
-    // Continue anyway
-}
-
-// Include database and CSRF/security helpers
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../includes/security.php';
+// Database and CSRF/security helpers (csrf_validate, csrf_field, log_security_event)
+require_once $appRoot . '/config/database.php';
+require_once $appRoot . '/includes/security.php';
 
 /**
  * Encryption helper functions for Remember Me password storage
@@ -194,18 +191,18 @@ if (isset($_GET['logout']) && $_GET['logout'] == '1') {
     exit;
 }
 
-// If already logged in (and password changed), redirect to appropriate portal (role-based from users.role)
+// If already logged in (and password changed), redirect to appropriate portal (role-based from users.role enum in goldenz_hr.sql)
 if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true && isset($_SESSION['user_role']) && !isset($_SESSION['require_password_change'])) {
     $role = $_SESSION['user_role'];
     if ($role === 'super_admin') {
         header('Location: /super-admin/dashboard');
         exit;
     }
-    if ($role === 'hr') {
-        header('Location: /hr/');
+    if ($role === 'humanresource') {
+        header('Location: /human-resource/dashboard');
         exit;
     }
-    if ($role === 'hr_admin' || in_array($role, ['admin', 'accounting', 'operation', 'logistics'], true)) {
+    if ($role === 'admin') {
         header('Location: /admin/dashboard');
         exit;
     }
@@ -213,9 +210,14 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true && isset($_
         header('Location: /developer/dashboard');
         exit;
     }
-    if (in_array($role, ['employee'], true)) {
-        header('Location: /admin/dashboard');
-        exit;
+}
+
+// Logged in but role has no dashboard (employee, accounting, operation, logistics) — show message on login page
+$no_dashboard_role = false;
+if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true && isset($_SESSION['user_role']) && !isset($_SESSION['require_password_change'])) {
+    $r = $_SESSION['user_role'];
+    if (in_array($r, ['employee', 'accounting', 'operation', 'logistics'], true)) {
+        $no_dashboard_role = true;
     }
 }
 
@@ -272,8 +274,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                     throw new Exception('Failed to update password in database');
                 }
                 
-                // Regenerate session ID to prevent fixation
-                session_regenerate_id(true);
+                SessionMiddleware::regenerate();
                 // Set session variables for login (no passwords stored)
                 $_SESSION['user_id'] = $_SESSION['temp_user_id'];
                 $_SESSION['user_role'] = $_SESSION['temp_role'];
@@ -301,7 +302,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
 
                 csrf_rotate();
 
-                // Redirect based on role (RBA from users.role)
+                // Redirect based on role (RBA from users.role enum in goldenz_hr.sql)
                 $role = $_SESSION['user_role'];
                 if ($role === 'super_admin') {
                     header('Location: /super-admin/dashboard');
@@ -309,11 +310,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                 } elseif ($role === 'developer') {
                     header('Location: /developer/dashboard');
                     exit;
-                } elseif ($role === 'hr') {
-                    header('Location: /hr/');
+                } elseif ($role === 'humanresource') {
+                    header('Location: /human-resource/dashboard');
+                    exit;
+                } elseif ($role === 'admin') {
+                    header('Location: /admin/dashboard');
                     exit;
                 } else {
-                    header('Location: /admin/dashboard');
+                    header('Location: /');
                     exit;
                 }
             } catch (Exception $e) {
@@ -420,8 +424,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     // Account is locked - don't auto-login
                     // Token remains valid for when account is unlocked
                 } else {
-                    // Regenerate session ID after remember-me restore
-                    session_regenerate_id(true);
+                    SessionMiddleware::regenerate();
                     // Valid token - restore session (no passwords in session)
                     $_SESSION['user_id'] = $user['id'];
                     $_SESSION['user_role'] = $user['role'];
@@ -434,18 +437,21 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     // Update last login
                     db_execute('UPDATE users SET last_login = NOW(), last_login_ip = ? WHERE id = ?', [$_SERVER['REMOTE_ADDR'] ?? null, $user['id']]);
                     
-                    // Redirect based on role (RBA from users.role)
+                    // Redirect based on role (RBA from users.role enum in goldenz_hr.sql)
                     if ($user['role'] === 'super_admin') {
                         header('Location: /super-admin/dashboard');
                         exit;
                     } elseif ($user['role'] === 'developer') {
                         header('Location: /developer/dashboard');
                         exit;
-                    } elseif ($user['role'] === 'hr') {
-                        header('Location: /hr/');
+                    } elseif ($user['role'] === 'humanresource') {
+                        header('Location: /human-resource/dashboard');
+                        exit;
+                    } elseif ($user['role'] === 'admin') {
+                        header('Location: /admin/dashboard');
                         exit;
                     } else {
-                        header('Location: /admin/dashboard');
+                        header('Location: /');
                         exit;
                     }
                 }
@@ -485,7 +491,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     $debug_info[] = "Username: " . ($username ?: '(empty)');
     $debug_info[] = "Password: " . ($password ? '(provided)' : '(empty)');
     
-    if (empty($username) || empty($password)) {
+    // Rate limit: max 5 login attempts per 10 minutes per username
+    if (!empty($username) && !RateLimitMiddleware::checkLogin($username)) {
+        $error = 'Too many login attempts. Please try again in 10 minutes.';
+        $debug_info[] = "Rate limited: " . $username;
+        if ($wantsJson) {
+            $respondJson(['success' => false, 'error' => 'rate_limited', 'message' => $error], 429);
+        }
+    } elseif (empty($username) || empty($password)) {
         $error = 'Please enter both username and password';
         $debug_info[] = "Validation failed: empty fields";
         if ($wantsJson) {
@@ -605,8 +618,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                             ]);
                         }
                     } else {
-                        // Allowed roles for login (must match users.role enum: super_admin, hr_admin, hr, admin, accounting, operation, logistics, employee, developer)
-                        if (!in_array($user['role'], ['super_admin', 'hr_admin', 'hr', 'admin', 'accounting', 'operation', 'logistics', 'employee', 'developer'], true)) {
+                        // Allowed roles for login (must match users.role enum in goldenz_hr.sql: super_admin, admin, humanresource, accounting, operation, logistics, employee, developer)
+                        if (!in_array($user['role'], ['super_admin', 'admin', 'humanresource', 'accounting', 'operation', 'logistics', 'employee', 'developer'], true)) {
                             $error = 'This account role is not permitted to sign in.';
                             $debug_info[] = "Role not allowed: " . $user['role'];
                             if ($wantsJson) {
@@ -663,8 +676,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                                 log_security_event('Login Success', "User: {$user['username']} ({$user['name']}) - Role: {$user['role']} - IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'Unknown'));
                             }
                             
-                            // Regenerate session ID on login to prevent fixation
-                            session_regenerate_id(true);
+                            RateLimitMiddleware::clear($username);
+                            SessionMiddleware::regenerate();
                             // Set session variables (no passwords in session)
                             $_SESSION['user_id'] = $user['id'];
                             $_SESSION['user_role'] = $user['role'];
@@ -808,7 +821,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                                 }
                             }
                             
-                            // Redirect based on role (Role-Based Dashboard Access)
+                            // Redirect based on role (Role-Based Dashboard Access — matches users.role enum in goldenz_hr.sql)
                             if ($user['role'] === 'super_admin') {
                                 $debug_info[] = "Redirecting to: /super-admin/dashboard";
                                 if ($wantsJson) {
@@ -820,7 +833,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                                 header('Location: /super-admin/dashboard');
                                 exit;
                             } elseif ($user['role'] === 'developer') {
-                                $debug_info[] = "Redirecting to: ../developer/dashboard";
+                                $debug_info[] = "Redirecting to: /developer/dashboard";
                                 if ($wantsJson) {
                                     $respondJson([
                                         'success' => true,
@@ -829,17 +842,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                                 }
                                 header('Location: /developer/dashboard');
                                 exit;
-                            } elseif ($user['role'] === 'hr') {
-                                $debug_info[] = "Redirecting to: /hr/";
+                            } elseif ($user['role'] === 'humanresource') {
+                                $debug_info[] = "Redirecting to: /human-resource/dashboard";
                                 if ($wantsJson) {
                                     $respondJson([
                                         'success' => true,
-                                        'redirect' => '/hr/'
+                                        'redirect' => '/human-resource/dashboard'
                                     ]);
                                 }
-                                header('Location: /hr/');
+                                header('Location: /human-resource/dashboard');
                                 exit;
-                            } else {
+                            } elseif ($user['role'] === 'admin') {
                                 $debug_info[] = "Redirecting to: /admin/dashboard";
                                 if ($wantsJson) {
                                     $respondJson([
@@ -849,10 +862,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                                 }
                                 header('Location: /admin/dashboard');
                                 exit;
+                            } else {
+                                $debug_info[] = "Redirecting to: / (no dashboard for role)";
+                                if ($wantsJson) {
+                                    $respondJson([
+                                        'success' => true,
+                                        'redirect' => '/'
+                                    ]);
+                                }
+                                header('Location: /');
+                                exit;
                             }
                         }
                     }
                 } else {
+                    RateLimitMiddleware::recordFail($username);
                     $error = 'Invalid username or password';
                     $debug_info[] = "Password verification failed";
                     if ($wantsJson) {
@@ -941,15 +965,15 @@ ob_end_flush();
     <title>Login</title>
     
     <!-- Favicon: circular SVG with embedded logo (favicon.php) so logo is visible; JPG fallback -->
-    <link rel="icon" type="image/svg+xml" href="/admin/assets/favicon.php">
-    <link rel="icon" type="image/jpeg" href="/admin/assets/images/goldenz-logo.jpg">
-    <link rel="apple-touch-icon" href="/admin/assets/images/goldenz-logo.jpg">
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.php">
+    <link rel="icon" type="image/jpeg" href="/assets/images/goldenz-logo.jpg">
+    <link rel="apple-touch-icon" href="/assets/images/goldenz-logo.jpg">
 
     <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-    <link href="/admin/assets/css/login.css" rel="stylesheet">
+    <link href="/assets/css/login.css" rel="stylesheet">
 
     <!-- Security Headers -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
@@ -1015,7 +1039,7 @@ ob_end_flush();
         <!-- Left Branded Panel -->
         <div class="login-branded-panel">
             <div class="branded-content">
-                <img src="/admin/assets/images/goldenz-logo.jpg" alt="Golden Z-5 Security and Investigation Agency, Inc. Logo" class="branded-logo reveal-item" onerror="this.style.display='none'">
+                <img src="/assets/images/goldenz-logo.jpg" alt="Golden Z-5 Security and Investigation Agency, Inc. Logo" class="branded-logo reveal-item" onerror="this.style.display='none'">
                 <h1 class="branded-headline reveal-item">Golden Z-5 Security and Investigation Agency, Inc.</h1>
                 <p class="branded-description reveal-item">
                     Human Resources Management System<br>
@@ -1050,7 +1074,18 @@ ob_end_flush();
                         <p class="auth-subtitle">Enter your authorized credentials to access the system</p>
                     </div>
 
-                <?php if ($error && $error !== 'inactive' && $error !== 'suspended'): ?>
+                <?php if (!empty($no_dashboard_role)): ?>
+                    <div class="alert alert-warning" role="alert">
+                        <div class="alert-icon">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div class="alert-content">
+                            <strong>No dashboard access</strong>
+                            <p>Your curreent role does not have a dashboard assigned. Please contact your administrator.</p>
+                            <a href="?logout=1" class="btn btn-sm btn-outline-secondary mt-2">Logout</a>
+                        </div>
+                    </div>
+                <?php elseif ($error && $error !== 'inactive' && $error !== 'suspended'): ?>
                     <div class="alert alert-danger" role="alert">
                         <div class="alert-icon">
                             <i class="fas fa-exclamation-circle"></i>
@@ -1294,7 +1329,7 @@ ob_end_flush();
             </button>
             
             <div class="system-info-header">
-                <img src="/admin/assets/images/goldenz-logo.jpg" alt="Golden Z-5 Logo" class="modal-logo" onerror="this.style.display='none'" width="80" height="80">
+                <img src="/assets/images/goldenz-logo.jpg" alt="Golden Z-5 Logo" class="modal-logo" onerror="this.style.display='none'" width="80" height="80">
                 <h2 id="systemInfoTitle">Golden Z-5 HR Management System</h2>
                 <p class="modal-subtitle" id="systemInfoDescription">Comprehensive Workforce Management Solution</p>
             </div>
@@ -1478,8 +1513,8 @@ ob_end_flush();
 
     <!-- JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/admin/assets/js/login.js"></script>
-    <!-- Login/AI-help logic is in /admin/assets/js/login.js -->
+    <script src="/assets/js/login.js"></script>
+    <!-- Login/AI-help logic is in /assets/js/login.js -->
 
     <!-- Futuristic Status Error Modal -->
     <div class="modal fade" id="statusErrorModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
