@@ -230,21 +230,27 @@ $recent_users = db_fetch_all('SELECT id, username, email, name, role, status, cr
 
     <!-- Success/Error Messages -->
     <?php if ($success_message): ?>
-    <div class="portal-alert portal-alert-success" role="alert">
+    <div class="portal-alert portal-alert-success portal-alert-auto-hide" role="alert" id="successAlert">
         <i class="fas fa-check-circle" aria-hidden="true"></i>
         <span><?php echo $success_message; ?></span>
+        <button type="button" class="portal-alert-close" aria-label="Close notification" onclick="this.parentElement.remove()">
+            <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
     </div>
     <?php endif; ?>
 
     <?php if ($error_message): ?>
-    <div class="portal-alert portal-alert-error" role="alert">
+    <div class="portal-alert portal-alert-error" role="alert" id="errorAlert">
         <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
         <span><?php echo htmlspecialchars($error_message); ?></span>
+        <button type="button" class="portal-alert-close" aria-label="Close notification" onclick="this.parentElement.remove()">
+            <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
     </div>
     <?php endif; ?>
 
     <?php if ($created_user && isset($created_user['password'])): ?>
-    <div class="portal-alert portal-alert-warning" role="alert">
+    <div class="portal-alert portal-alert-warning" role="alert" id="warningAlert">
         <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
         <div>
             <strong>Email delivery failed. Please provide this password to the user manually:</strong>
@@ -252,6 +258,9 @@ $recent_users = db_fetch_all('SELECT id, username, email, name, role, status, cr
                 Password: <strong><?php echo htmlspecialchars($created_user['password']); ?></strong>
             </div>
         </div>
+        <button type="button" class="portal-alert-close" aria-label="Close notification" onclick="this.parentElement.remove()">
+            <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
     </div>
     <?php endif; ?>
 
@@ -523,6 +532,19 @@ $recent_users = db_fetch_all('SELECT id, username, email, name, role, status, cr
     display: flex;
     align-items: flex-start;
     gap: 12px;
+    position: relative;
+    animation: fadeInSlideDown 0.4s ease-out;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out, margin 0.3s ease-out;
+}
+
+.portal-alert.portal-alert-hiding {
+    opacity: 0;
+    transform: translateY(-10px);
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    overflow: hidden;
 }
 
 .portal-alert-success {
@@ -541,6 +563,45 @@ $recent_users = db_fetch_all('SELECT id, username, email, name, role, status, cr
     background: #fffbeb;
     border-left: 4px solid #f59e0b;
     color: #92400e;
+}
+
+.portal-alert-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    opacity: 0.7;
+    transition: opacity 0.2s, background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+}
+
+.portal-alert-close:hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.portal-alert-close i {
+    font-size: 12px;
+}
+
+@keyframes fadeInSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .portal-form-compact .portal-form-group {
@@ -905,3 +966,54 @@ $recent_users = db_fetch_all('SELECT id, username, email, name, role, status, cr
     }
 }
 </style>
+
+<script>
+(function() {
+    'use strict';
+    
+    // Auto-hide success alerts after 5 seconds
+    const successAlert = document.getElementById('successAlert');
+    if (successAlert && successAlert.classList.contains('portal-alert-auto-hide')) {
+        setTimeout(function() {
+            if (successAlert && successAlert.parentNode) {
+                successAlert.classList.add('portal-alert-hiding');
+                setTimeout(function() {
+                    if (successAlert && successAlert.parentNode) {
+                        successAlert.remove();
+                    }
+                }, 300); // Wait for fade out animation
+            }
+        }, 5000); // Show for 5 seconds
+    }
+    
+    // Auto-hide error alerts after 8 seconds (longer for errors)
+    const errorAlert = document.getElementById('errorAlert');
+    if (errorAlert) {
+        setTimeout(function() {
+            if (errorAlert && errorAlert.parentNode) {
+                errorAlert.classList.add('portal-alert-hiding');
+                setTimeout(function() {
+                    if (errorAlert && errorAlert.parentNode) {
+                        errorAlert.remove();
+                    }
+                }, 300);
+            }
+        }, 8000);
+    }
+    
+    // Auto-hide warning alerts after 10 seconds (longer for password display)
+    const warningAlert = document.getElementById('warningAlert');
+    if (warningAlert) {
+        setTimeout(function() {
+            if (warningAlert && warningAlert.parentNode) {
+                warningAlert.classList.add('portal-alert-hiding');
+                setTimeout(function() {
+                    if (warningAlert && warningAlert.parentNode) {
+                        warningAlert.remove();
+                    }
+                }, 300);
+            }
+        }, 10000);
+    }
+})();
+</script>
