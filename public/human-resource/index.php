@@ -3,7 +3,7 @@
  * Human Resource Portal — Administration, Evaluation & Assessments (alternate URL)
  * Routes: ?page=dashboard | employees | reporting | ...
  * Middleware: Session → Auth → Role. CSRF verified on POST.
- * Same roles as /admin/. For Hiring (hr role only) use /hr/.
+ * Human Resource portal: role humanresource (matches users.role enum in goldenz_hr.sql).
  *
  * CONVENTION: JS in assets/js/, CSS in assets/css/, markup in includes/ and pages/.
  */
@@ -25,7 +25,8 @@ require_once $appRoot . '/app/middleware/CsrfMiddleware.php';
 
 SessionMiddleware::handle();
 AuthMiddleware::check();
-RoleMiddleware::requireRole(['super_admin', 'hr_admin', 'hr', 'admin', 'accounting', 'operation', 'logistics', 'employee']);
+// Human Resource portal: only humanresource role can access
+RoleMiddleware::requireRole(['humanresource']);
 
 // CSRF for POST (form submissions, uploads)
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {

@@ -17,10 +17,11 @@
  *    - Updates password_changed_at timestamp
  *    - Auto-logs user in after password change
  * 
- * 3. ROLE-BASED DASHBOARD ACCESS:
- *    - developer → ../developer/index.php
- *    - hr_admin, admin, accounting, operation, logistics → /admin (Administration, Evaluation & Assessments)
- *    - hr → /hr (Hiring)
+ * 3. ROLE-BASED DASHBOARD ACCESS (matches users.role enum in goldenz_hr.sql):
+ *    - super_admin → /super-admin/dashboard
+ *    - humanresource → /human-resource (Human Resource portal; only this role can access it)
+ *    - admin, accounting, operation, logistics, employee → /admin (Administration portal)
+ *    - developer → /developer/dashboard
  *    - Sets session variables: user_id, user_role, username, name, employee_id, department
  * 
  * 4. SECURITY & AUDIT:
@@ -190,27 +191,23 @@ if (isset($_GET['logout']) && $_GET['logout'] == '1') {
     exit;
 }
 
-// If already logged in (and password changed), redirect to appropriate portal (role-based from users.role)
+// If already logged in (and password changed), redirect to appropriate portal (role-based from users.role enum in goldenz_hr.sql)
 if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true && isset($_SESSION['user_role']) && !isset($_SESSION['require_password_change'])) {
     $role = $_SESSION['user_role'];
     if ($role === 'super_admin') {
         header('Location: /super-admin/dashboard');
         exit;
     }
-    if ($role === 'hr') {
-        header('Location: /hr/');
+    if ($role === 'humanresource') {
+        header('Location: /human-resource/dashboard');
         exit;
     }
-    if ($role === 'hr_admin' || in_array($role, ['admin', 'accounting', 'operation', 'logistics'], true)) {
+    if (in_array($role, ['admin', 'accounting', 'operation', 'logistics', 'employee'], true)) {
         header('Location: /admin/dashboard');
         exit;
     }
     if ($role === 'developer') {
         header('Location: /developer/dashboard');
-        exit;
-    }
-    if (in_array($role, ['employee'], true)) {
-        header('Location: /admin/dashboard');
         exit;
     }
 }
@@ -296,7 +293,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
 
                 csrf_rotate();
 
-                // Redirect based on role (RBA from users.role)
+                // Redirect based on role (RBA from users.role enum in goldenz_hr.sql)
                 $role = $_SESSION['user_role'];
                 if ($role === 'super_admin') {
                     header('Location: /super-admin/dashboard');
@@ -304,8 +301,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                 } elseif ($role === 'developer') {
                     header('Location: /developer/dashboard');
                     exit;
-                } elseif ($role === 'hr') {
-                    header('Location: /hr/');
+                } elseif ($role === 'humanresource') {
+                    header('Location: /human-resource/dashboard');
+                    exit;
+                } elseif (in_array($role, ['admin', 'accounting', 'operation', 'logistics', 'employee'], true)) {
+                    header('Location: /admin/dashboard');
                     exit;
                 } else {
                     header('Location: /admin/dashboard');
@@ -428,15 +428,18 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     // Update last login
                     db_execute('UPDATE users SET last_login = NOW(), last_login_ip = ? WHERE id = ?', [$_SERVER['REMOTE_ADDR'] ?? null, $user['id']]);
                     
-                    // Redirect based on role (RBA from users.role)
+                    // Redirect based on role (RBA from users.role enum in goldenz_hr.sql)
                     if ($user['role'] === 'super_admin') {
                         header('Location: /super-admin/dashboard');
                         exit;
                     } elseif ($user['role'] === 'developer') {
                         header('Location: /developer/dashboard');
                         exit;
-                    } elseif ($user['role'] === 'hr') {
-                        header('Location: /hr/');
+                    } elseif ($user['role'] === 'humanresource') {
+                        header('Location: /human-resource/dashboard');
+                        exit;
+                    } elseif (in_array($user['role'], ['admin', 'accounting', 'operation', 'logistics', 'employee'], true)) {
+                        header('Location: /admin/dashboard');
                         exit;
                     } else {
                         header('Location: /admin/dashboard');
@@ -606,8 +609,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                             ]);
                         }
                     } else {
-                        // Allowed roles for login (must match users.role enum: super_admin, hr_admin, hr, admin, accounting, operation, logistics, employee, developer)
-                        if (!in_array($user['role'], ['super_admin', 'hr_admin', 'hr', 'admin', 'accounting', 'operation', 'logistics', 'employee', 'developer'], true)) {
+                        // Allowed roles for login (must match users.role enum in goldenz_hr.sql: super_admin, admin, humanresource, accounting, operation, logistics, employee, developer)
+                        if (!in_array($user['role'], ['super_admin', 'admin', 'humanresource', 'accounting', 'operation', 'logistics', 'employee', 'developer'], true)) {
                             $error = 'This account role is not permitted to sign in.';
                             $debug_info[] = "Role not allowed: " . $user['role'];
                             if ($wantsJson) {
@@ -809,7 +812,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                                 }
                             }
                             
-                            // Redirect based on role (Role-Based Dashboard Access)
+                            // Redirect based on role (Role-Based Dashboard Access — matches users.role enum in goldenz_hr.sql)
                             if ($user['role'] === 'super_admin') {
                                 $debug_info[] = "Redirecting to: /super-admin/dashboard";
                                 if ($wantsJson) {
@@ -821,7 +824,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                                 header('Location: /super-admin/dashboard');
                                 exit;
                             } elseif ($user['role'] === 'developer') {
-                                $debug_info[] = "Redirecting to: ../developer/dashboard";
+                                $debug_info[] = "Redirecting to: /developer/dashboard";
                                 if ($wantsJson) {
                                     $respondJson([
                                         'success' => true,
@@ -830,18 +833,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                                 }
                                 header('Location: /developer/dashboard');
                                 exit;
-                            } elseif ($user['role'] === 'hr') {
-                                $debug_info[] = "Redirecting to: /hr/";
+                            } elseif ($user['role'] === 'humanresource') {
+                                $debug_info[] = "Redirecting to: /human-resource/dashboard";
                                 if ($wantsJson) {
                                     $respondJson([
                                         'success' => true,
-                                        'redirect' => '/hr/'
+                                        'redirect' => '/human-resource/dashboard'
                                     ]);
                                 }
-                                header('Location: /hr/');
+                                header('Location: /human-resource/dashboard');
+                                exit;
+                            } elseif (in_array($user['role'], ['admin', 'accounting', 'operation', 'logistics', 'employee'], true)) {
+                                $debug_info[] = "Redirecting to: /admin/dashboard";
+                                if ($wantsJson) {
+                                    $respondJson([
+                                        'success' => true,
+                                        'redirect' => '/admin/dashboard'
+                                    ]);
+                                }
+                                header('Location: /admin/dashboard');
                                 exit;
                             } else {
-                                $debug_info[] = "Redirecting to: /admin/dashboard";
+                                $debug_info[] = "Redirecting to: /admin/dashboard (fallback)";
                                 if ($wantsJson) {
                                     $respondJson([
                                         'success' => true,

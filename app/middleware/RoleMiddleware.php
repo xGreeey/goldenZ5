@@ -11,7 +11,7 @@ class RoleMiddleware
     /**
      * Require the current user to have one of the given roles. Exits with 403 or "Access denied" if not.
      *
-     * @param string|string[] $roles Single role or list (e.g. 'hr_admin' or ['hr_admin', 'hr', 'super_admin'])
+     * @param string|string[] $roles Single role or list (e.g. 'humanresource' or ['admin', 'humanresource', 'super_admin'] — must match users.role enum)
      */
     public static function requireRole($roles): void
     {

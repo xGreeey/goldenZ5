@@ -3,7 +3,7 @@
  * Admin Portal — Administration, Evaluation & Assessments
  * Routes: ?page=dashboard | employees | reporting | ...
  * Middleware: Session → Auth → Role. CSRF verified on POST.
- * For Hiring (hr role) use /hr/ or /human-resource/.
+ * For humanresource role use /human-resource/.
  *
  * CONVENTION: JS in assets/js/, CSS in assets/css/, markup in includes/ and pages/.
  */
@@ -25,8 +25,8 @@ require_once $appRoot . '/app/middleware/CsrfMiddleware.php';
 
 SessionMiddleware::handle();
 AuthMiddleware::check();
-// Roles that index.php sends to /admin/dashboard: hr_admin, admin, accounting, operation, logistics, employee (+ super_admin if ever)
-RoleMiddleware::requireRole(['super_admin', 'hr_admin', 'admin', 'accounting', 'operation', 'logistics', 'employee']);
+// Roles that index.php sends to /admin/dashboard (only humanresource can access /human-resource/)
+RoleMiddleware::requireRole(['super_admin', 'admin', 'accounting', 'operation', 'logistics', 'employee']);
 
 // CSRF for POST (form submissions, uploads)
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
