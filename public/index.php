@@ -44,14 +44,8 @@ ini_set('display_errors', 1);
 ini_set('log_errors', 1);
 
 
-// Start session first (before any output)
-if (session_status() === PHP_SESSION_NONE) {
-    $sessionPath = __DIR__ . '/../storage/sessions';
-    if (is_dir($sessionPath) || mkdir($sessionPath, 0755, true)) {
-        session_save_path($sessionPath);
-    }
-    session_start();
-}
+// Start session first (before any output) — secure params in config/session.php
+require_once __DIR__ . '/../config/session.php';
 
 // Set security headers
 header('X-Content-Type-Options: nosniff');
@@ -155,16 +149,27 @@ if (isset($_GET['logout']) && $_GET['logout'] == '1') {
     // NOTE: We intentionally do NOT clear remembered_username and remembered_password cookies here
     // so both username and password fields can be pre-filled after logout
     
+    $_SESSION = [];
     session_unset();
-    session_destroy();
-    // Clear session cookie
-    if (ini_get("session.use_cookies")) {
+    if (ini_get('session.use_cookies')) {
         $params = session_get_cookie_params();
-        setcookie(session_name(), '', time() - 42000,
-            $params["path"], $params["domain"],
-            $params["secure"], $params["httponly"]
-        );
+        if (PHP_VERSION_ID >= 70300) {
+            setcookie(session_name(), '', [
+                'expires' => time() - 42000,
+                'path' => $params['path'],
+                'domain' => $params['domain'],
+                'secure' => $params['secure'],
+                'httponly' => $params['httponly'],
+                'samesite' => $params['samesite'] ?? 'Lax',
+            ]);
+        } else {
+            setcookie(session_name(), '', time() - 42000,
+                $params['path'], $params['domain'],
+                $params['secure'], $params['httponly']
+            );
+        }
     }
+    session_destroy();
     header('Location: /');
     exit;
 }
@@ -243,7 +248,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                     throw new Exception('Failed to update password in database');
                 }
                 
-                // Set session variables for login
+                // Regenerate session ID to prevent fixation
+                session_regenerate_id(true);
+                // Set session variables for login (no passwords stored)
                 $_SESSION['user_id'] = $_SESSION['temp_user_id'];
                 $_SESSION['user_role'] = $_SESSION['temp_role'];
                 $_SESSION['logged_in'] = true;
@@ -251,7 +258,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                 $_SESSION['name'] = $_SESSION['temp_name'];
                 $_SESSION['employee_id'] = $_SESSION['temp_employee_id'] ?? null;
                 $_SESSION['department'] = $_SESSION['temp_department'] ?? null;
-                
+
                 // Update last login and reset failed attempts
                 $update_login_sql = "UPDATE users SET last_login = NOW(), last_login_ip = ?, 
                                     failed_login_attempts = 0, locked_until = NULL 
@@ -404,7 +411,9 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     // Account is locked - don't auto-login
                     // Token remains valid for when account is unlocked
                 } else {
-                    // Valid token - restore session
+                    // Regenerate session ID after remember-me restore
+                    session_regenerate_id(true);
+                    // Valid token - restore session (no passwords in session)
                     $_SESSION['user_id'] = $user['id'];
                     $_SESSION['user_role'] = $user['role'];
                     $_SESSION['logged_in'] = true;
@@ -412,7 +421,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     $_SESSION['name'] = $user['name'];
                     $_SESSION['employee_id'] = $user['employee_id'] ?? null;
                     $_SESSION['department'] = $user['department'] ?? null;
-                    
+
                     // Update last login
                     $update_sql = "UPDATE users SET last_login = NOW(), last_login_ip = ? WHERE id = ?";
                     $update_stmt = $pdo->prepare($update_sql);
@@ -642,7 +651,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                                 log_security_event('Login Success', "User: {$user['username']} ({$user['name']}) - Role: {$user['role']} - IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'Unknown'));
                             }
                             
-                            // Set session variables
+                            // Regenerate session ID on login to prevent fixation
+                            session_regenerate_id(true);
+                            // Set session variables (no passwords in session)
                             $_SESSION['user_id'] = $user['id'];
                             $_SESSION['user_role'] = $user['role'];
                             $_SESSION['logged_in'] = true;
@@ -650,7 +661,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                             $_SESSION['name'] = $user['name'];
                             $_SESSION['employee_id'] = $user['employee_id'] ?? null;
                             $_SESSION['department'] = $user['department'] ?? null;
-                            
+
                             $debug_info[] = "Session variables set";
                             
                             // Handle "Remember Me" functionality
