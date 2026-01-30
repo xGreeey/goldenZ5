@@ -24,9 +24,13 @@ DirectoryIndex index.php
     RewriteCond %{REQUEST_URI} !^/api/ [NC]
     RewriteRule ^(.*)\.php$ /$1 [R=302,L,QSA]
 
-    # HR ADMIN clean routes
-    RewriteRule ^hr-admin/?$ hr-admin/index.php [L]
-    RewriteRule ^hr-admin/([^/]+)/?$ hr-admin/index.php?page=$1 [L,QSA]
+    # Admin (administration, evaluation & assessments) clean routes
+    RewriteRule ^admin/?$ admin/index.php [L]
+    RewriteRule ^admin/([^/]+)/?$ admin/index.php?page=$1 [L,QSA]
+
+    # HR (hiring) clean routes
+    RewriteRule ^hr/?$ hr/index.php [L]
+    RewriteRule ^hr/([^/]+)/?$ hr/index.php?page=$1 [L,QSA]
 
     # SUPER ADMIN clean routes
     RewriteRule ^super-admin/?$ super-admin/index.php [L]
