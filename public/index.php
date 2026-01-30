@@ -648,10 +648,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                                 if ($wantsJson) {
                                     $respondJson([
                                         'success' => true,
-                                        'redirect' => '2fa.php'
+                                        'redirect' => '/2fa'
                                     ]);
                                 }
-                                header('Location: 2fa.php');
+                                header('Location: /2fa');
                                 exit;
                             }
 
@@ -1245,7 +1245,7 @@ ob_end_flush();
     </div>
     
     <!-- Notification Icon - Upper Right -->
-    <a href="alerts-display.php" class="notification-icon" title="View License Alerts">
+    <a href="/alerts-display" class="notification-icon" title="View License Alerts">
         <i class="fas fa-bell"></i>
     </a>
 
