@@ -920,10 +920,10 @@ ob_end_flush();
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
     <title>Login</title>
     
-    <!-- Favicon (place logo.svg and favicon.ico in public/ or public/assets/) -->
-    <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
-    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
-    <link rel="apple-touch-icon" href="assets/logo.svg">
+    <!-- Favicon: circular SVG with embedded logo (favicon.php) so logo is visible; JPG fallback -->
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.php">
+    <link rel="icon" type="image/jpeg" href="assets/images/goldenz-logo.jpg">
+    <link rel="apple-touch-icon" href="assets/images/goldenz-logo.jpg">
 
     <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -995,7 +995,7 @@ ob_end_flush();
         <!-- Left Branded Panel -->
         <div class="login-branded-panel">
             <div class="branded-content">
-                <img src="assets/logo.svg" alt="Golden Z-5 Security and Investigation Agency, Inc. Logo" class="branded-logo" onerror="this.style.display='none'">
+                <img src="assets/images/goldenz-logo.jpg" alt="Golden Z-5 Security and Investigation Agency, Inc. Logo" class="branded-logo" onerror="this.style.display='none'">
                 <h1 class="branded-headline">Golden Z-5 Security and Investigation Agency, Inc.</h1>
                 <p class="branded-description">
                     Human Resources Management System<br>
@@ -1274,22 +1274,12 @@ ob_end_flush();
             </button>
             
             <div class="system-info-header">
-                <img src="assets/logo.svg" alt="Golden Z-5 Logo" class="modal-logo" onerror="this.style.display='none'" width="80" height="80">
+                <img src="assets/images/goldenz-logo.jpg" alt="Golden Z-5 Logo" class="modal-logo" onerror="this.style.display='none'" width="80" height="80">
                 <h2 id="systemInfoTitle">Golden Z-5 HR Management System</h2>
                 <p class="modal-subtitle" id="systemInfoDescription">Comprehensive Workforce Management Solution</p>
             </div>
             
             <div class="system-info-body">
-                <section class="info-section">
-                    <h3><i class="fas fa-building"></i> About Golden Z-5</h3>
-                    <p>
-                        <strong>Golden Z-5 Security and Investigation Agency, Inc.</strong> is duly licensed by the 
-                        PNP-CSG-SAGSD (Philippine National Police - Civil Security Group - Security Agencies and Guards 
-                        Supervision Division) and registered with the Securities and Exchange Commission to provide 
-                        professional Security Services.
-                    </p>
-                </section>
-                
                 <section class="info-section">
                     <h3><i class="fas fa-desktop"></i> System Overview</h3>
                     <p>
@@ -1298,7 +1288,7 @@ ob_end_flush();
                         requirements.
                     </p>
                 </section>
-                
+
                 <section class="info-section">
                     <h3><i class="fas fa-users"></i> Departments & Users</h3>
                     <div class="features-grid">
@@ -1334,7 +1324,7 @@ ob_end_flush();
                         </div>
                     </div>
                 </section>
-                
+
                 <section class="info-section">
                     <h3><i class="fas fa-star"></i> Key Features</h3>
                     <ul class="features-list">
@@ -1348,7 +1338,7 @@ ob_end_flush();
                         <li><i class="fas fa-check-circle"></i> <strong>Dashboard:</strong> Real-time insights and analytics</li>
                     </ul>
                 </section>
-                
+
                 <section class="info-section">
                     <h3><i class="fas fa-shield-alt"></i> Security & Compliance</h3>
                     <p>
@@ -1357,7 +1347,17 @@ ob_end_flush();
                         to ensure data protection and regulatory compliance.
                     </p>
                 </section>
-                
+
+                <section class="info-section">
+                    <h3><i class="fas fa-building"></i> About Golden Z-5</h3>
+                    <p>
+                        <strong>Golden Z-5 Security and Investigation Agency, Inc.</strong> is duly licensed by the 
+                        PNP-CSG-SAGSD (Philippine National Police - Civil Security Group - Security Agencies and Guards 
+                        Supervision Division) and registered with the Securities and Exchange Commission to provide 
+                        professional Security Services.
+                    </p>
+                </section>
+
                 <section class="info-section contact-section">
                     <h3><i class="fas fa-envelope"></i> Contact Information</h3>
                     <div class="contact-info">
