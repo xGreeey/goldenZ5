@@ -5,13 +5,13 @@
  * This favicon is used globally across all pages.
  * Uses mask for better browser compatibility to ensure circular shape.
  */
-$logoPath = __DIR__ . '/images/goldenz-logo.jpg';
-$mime = 'image/jpeg';
+$logoPath = __DIR__ . '/images/logo.png';
+$mime = 'image/png';
 
 if (!is_file($logoPath)) {
-    // Fallback: try PNG if JPG doesn't exist
-    $logoPath = __DIR__ . '/images/goldenz-logo.png';
-    $mime = 'image/png';
+    // Fallback: try JPG if PNG doesn't exist
+    $logoPath = __DIR__ . '/images/goldenz-logo.jpg';
+    $mime = 'image/jpeg';
 }
 
 header('Content-Type: image/svg+xml');

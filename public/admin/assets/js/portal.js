@@ -18,6 +18,10 @@
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
     const userMenuTrigger = document.getElementById('userMenuTrigger');
     const userMenuPopup = document.getElementById('userMenuPopup');
+    const notificationTrigger = document.getElementById('notificationTrigger');
+    const notificationPopup = document.getElementById('notificationPopup');
+    const notificationBadge = document.getElementById('notificationBadge');
+    const markAllRead = document.getElementById('markAllRead');
     const themeToggle = document.getElementById('themeToggle');
     const html = document.documentElement;
 
@@ -38,10 +42,7 @@
         try {
             localStorage.setItem(STORAGE_THEME, theme);
         } catch (_) {}
-        if (themeToggle) {
-            const icon = themeToggle.querySelector('i');
-            if (icon) icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-        }
+        // Visuals for the switch are handled purely by CSS via [data-theme]
     }
 
     setTheme(getStoredTheme());
@@ -372,6 +373,98 @@
             sidebar && sidebar.classList.remove('open');
             sidebarOverlay.classList.remove('visible');
         });
+    }
+
+    /* -------------------------------------------------------------------------
+       NOTIFICATION POPUP (header bell icon opens dropdown)
+       ------------------------------------------------------------------------- */
+    if (notificationTrigger && notificationPopup) {
+        function openNotificationPopup() {
+            notificationPopup.removeAttribute('hidden');
+            notificationTrigger.setAttribute('aria-expanded', 'true');
+        }
+
+        function closeNotificationPopup() {
+            notificationPopup.setAttribute('hidden', '');
+            notificationTrigger.setAttribute('aria-expanded', 'false');
+        }
+
+        // Toggle popup on trigger click
+        notificationTrigger.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (notificationPopup.hasAttribute('hidden')) {
+                openNotificationPopup();
+            } else {
+                closeNotificationPopup();
+            }
+        });
+
+        // Close when clicking outside
+        document.addEventListener('click', function (e) {
+            const target = e.target;
+            if (!notificationPopup.hasAttribute('hidden') && 
+                !notificationPopup.contains(target) && 
+                !notificationTrigger.contains(target)) {
+                closeNotificationPopup();
+            }
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !notificationPopup.hasAttribute('hidden')) {
+                closeNotificationPopup();
+                notificationTrigger.focus();
+            }
+        });
+
+        // Mark all as read handler
+        if (markAllRead) {
+            markAllRead.addEventListener('click', function (e) {
+                e.stopPropagation();
+                markNotificationRead([]); // Empty array means mark all as read
+            });
+        }
+
+        // Load notifications (placeholder - replace with actual API call)
+        function loadNotifications() {
+            // Example notification data structure
+            // const notifications = [
+            //     { id: 1, title: 'New employee added', message: 'John Doe has been added to the system', time: '2 hours ago', unread: true, icon: 'fa-user-plus' },
+            //     { id: 2, title: 'Document approved', message: 'Your document has been approved', time: '5 hours ago', unread: true, icon: 'fa-check-circle' }
+            // ];
+            
+            const notificationList = document.getElementById('notificationList');
+            if (!notificationList) return;
+
+            // For now, show empty state
+            // When you have real notifications, replace this with:
+            // const emptyState = notificationList.querySelector('.portal-notification-empty');
+            // if (notifications.length === 0) {
+            //     emptyState.style.display = 'flex';
+            // } else {
+            //     emptyState.style.display = 'none';
+            //     notifications.forEach(function (notif) {
+            //         const item = document.createElement('a');
+            //         item.className = 'portal-notification-item' + (notif.unread ? ' unread' : '');
+            //         item.href = '#';
+            //         item.innerHTML = '<div class="portal-notification-item-icon"><i class="fas ' + notif.icon + '" aria-hidden="true"></i></div>' +
+            //             '<div class="portal-notification-item-content">' +
+            //             '<div class="portal-notification-item-title">' + notif.title + '</div>' +
+            //             '<div class="portal-notification-item-message">' + notif.message + '</div>' +
+            //             '<div class="portal-notification-item-time">' + notif.time + '</div>' +
+            //             '</div>';
+            //         notificationList.appendChild(item);
+            //     });
+            //     // Update badge count
+            //     const unreadCount = notifications.filter(function (n) { return n.unread; }).length;
+            //     if (notificationBadge) {
+            //         notificationBadge.textContent = unreadCount > 0 ? unreadCount : '';
+            //     }
+            // }
+        }
+
+        // Load notifications on page load
+        loadNotifications();
     }
 
     /* -------------------------------------------------------------------------

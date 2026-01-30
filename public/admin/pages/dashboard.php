@@ -15,6 +15,16 @@ $stats = [
 $license_watch = [];
 $recent_activity = [];
 
+// Map view keys to human-friendly labels for role tabs
+$dashboard_view_labels = [
+    'overall'        => 'Overall',
+    'human-resource' => 'Human Resource',
+    'administration' => 'Administration',
+    'operations'     => 'Operations',
+    'logistics'      => 'Logistics',
+    'accounting'     => 'Accounting',
+];
+
 try {
     $pdo = get_db_connection();
 
@@ -68,35 +78,14 @@ try {
     // ignore
 }
 
-$view = isset($_GET['view']) ? trim($_GET['view']) : 'overview';
-$allowed_views = ['overview', 'list', 'board', 'timeline', 'dashboard', 'calendar', 'file'];
-if (!in_array($view, $allowed_views, true)) {
-    $view = 'overview';
-}
-$display_name = isset($current_user['name']) && $current_user['name'] !== '' ? $current_user['name'] : ($current_user['username'] ?? 'User');
-$user_initial = mb_strtoupper(mb_substr($display_name, 0, 1));
+// Shared dashboard header + tabs (universal across roles)
+$dashboard_scope = 'admin';
+require dirname(__DIR__, 2) . '/dashboard/header-tabs.php';
+// $view comes from header-tabs.php
+$view_label = $dashboard_view_labels[$view] ?? 'Dashboard';
 ?>
-<div class="portal-page portal-page-dashboard">
-    <div class="portal-dashboard-header">
-        <div class="portal-dashboard-welcome">
-            <span class="portal-dashboard-avatar" aria-hidden="true"><?php echo htmlspecialchars($user_initial); ?></span>
-            <div class="portal-dashboard-welcome-text">
-                <span class="portal-dashboard-user-name"><?php echo htmlspecialchars($display_name); ?></span>
-                <span class="portal-dashboard-greeting">Welcome back to Golden Z-5 HR</span>
-            </div>
-        </div>
-    </div>
-    <div class="portal-view-tabs-wrap">
-        <nav class="portal-view-tabs" role="tablist" aria-label="Dashboard views">
-            <a href="<?php echo htmlspecialchars($base_url); ?>?page=dashboard&view=overview" class="portal-view-tab <?php echo $view === 'overview' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $view === 'overview' ? 'true' : 'false'; ?>">Overview</a>
-            <a href="<?php echo htmlspecialchars($base_url); ?>?page=dashboard&view=list" class="portal-view-tab <?php echo $view === 'list' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $view === 'list' ? 'true' : 'false'; ?>">List</a>
-            <a href="<?php echo htmlspecialchars($base_url); ?>?page=dashboard&view=board" class="portal-view-tab <?php echo $view === 'board' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $view === 'board' ? 'true' : 'false'; ?>">Board</a>
-            <a href="<?php echo htmlspecialchars($base_url); ?>?page=dashboard&view=timeline" class="portal-view-tab <?php echo $view === 'timeline' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $view === 'timeline' ? 'true' : 'false'; ?>">Timeline</a>
-            <a href="<?php echo htmlspecialchars($base_url); ?>?page=dashboard&view=dashboard" class="portal-view-tab <?php echo $view === 'dashboard' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $view === 'dashboard' ? 'true' : 'false'; ?>">Dashboard</a>
-            <a href="<?php echo htmlspecialchars($base_url); ?>?page=dashboard&view=calendar" class="portal-view-tab <?php echo $view === 'calendar' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $view === 'calendar' ? 'true' : 'false'; ?>">Calendar</a>
-            <a href="<?php echo htmlspecialchars($base_url); ?>?page=dashboard&view=file" class="portal-view-tab <?php echo $view === 'file' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $view === 'file' ? 'true' : 'false'; ?>">File</a>
-        </nav>
-    </div>
+
+<?php if ($view === 'overall'): ?>
 
     <!-- Employee Summary Cards & Quick Stats / KPIs -->
     <section class="portal-section portal-dashboard-card">
@@ -245,4 +234,21 @@ $user_initial = mb_strtoupper(mb_substr($display_name, 0, 1));
             </div>
         <?php endif; ?>
     </section>
+
+<?php else: ?>
+    <!-- Role-specific dashboard tab: empty-state banner (no container card) -->
+    <div class="portal-dashboard-empty">
+        <div class="portal-dashboard-empty-header">
+            <h2 class="portal-dashboard-empty-title">
+                <?php echo htmlspecialchars($view_label); ?> reports &amp; analytics
+            </h2>
+        </div>
+        <div class="portal-dashboard-empty-body" role="status" aria-live="polite">
+            <p class="portal-dashboard-empty-primary">No reports available yet.</p>
+            <p class="portal-dashboard-empty-secondary">
+                Reports and analytics will appear here when configured.
+            </p>
+        </div>
+    </div>
+<?php endif; ?>
 </div>

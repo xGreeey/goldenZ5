@@ -88,20 +88,21 @@
     --hr-orange-950: #431407;
 
     /* --- Light mode: surfaces & text (from scale) --- */
-    --hr-bg-body: var(--hr-gray-100);
+    /* Body: very light slate, cards slightly lifted, sidebar deep */
+    --hr-bg-body: #f3f4f6; /* between gray-100 and slate-100 */
     --hr-bg-main: #ffffff;
-    --hr-bg-sidebar: var(--hr-gray-900);
+    --hr-bg-sidebar: var(--hr-gray-950);
     --hr-bg-sidebar-hover: rgba(255, 255, 255, 0.06);
-    --hr-bg-sidebar-active: rgba(255, 255, 255, 0.1);
-    --hr-bg-card: #ffffff;
-    --hr-bg-input: #ffffff;
-    --hr-border: var(--hr-gray-200);
-    --hr-border-sidebar: rgba(255, 255, 255, 0.08);
+    --hr-bg-sidebar-active: rgba(255, 255, 255, 0.12);
+    --hr-bg-card: #f9fafb; /* subtle elevation vs main */
+    --hr-bg-input: #fdfdfd;
+    --hr-border: var(--hr-gray-300);
+    --hr-border-sidebar: rgba(15, 23, 42, 0.55);
     --hr-text: var(--hr-gray-900);
     --hr-text-muted: var(--hr-gray-500);
     --hr-text-sidebar: var(--hr-gray-50);
     --hr-text-sidebar-muted: var(--hr-gray-400);
-    --hr-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --hr-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
     --hr-radius: 8px;
     --hr-radius-pill: 9999px;
     --hr-font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -112,8 +113,8 @@
     /* --- Semantic (mapped to scale for WCAG-friendly contrast) --- */
     --hr-primary: var(--hr-blue-500);
     --hr-primary-hover: var(--hr-blue-600);
-    --hr-primary-light: var(--hr-blue-50);
-    --hr-primary-focus: rgba(59, 130, 246, 0.15);
+    --hr-primary-light: var(--hr-blue-100);
+    --hr-primary-focus: rgba(37, 99, 235, 0.2);
     --hr-success: var(--hr-green-600);
     --hr-success-light: var(--hr-green-50);
     --hr-success-text: var(--hr-green-800);
@@ -131,31 +132,31 @@
 }
 
 [data-theme="dark"] {
-    /* --- Dark mode: surfaces from scale --- */
-    --hr-bg-body: var(--hr-gray-950);
-    --hr-bg-main: var(--hr-gray-900);
-    --hr-bg-sidebar: var(--hr-gray-950);
-    --hr-bg-sidebar-hover: rgba(255, 255, 255, 0.06);
-    --hr-bg-sidebar-active: rgba(255, 255, 255, 0.1);
+    /* --- Dark mode: deeper, more contrasty surfaces --- */
+    --hr-bg-body: #020617; /* near-black slate */
+    --hr-bg-main: #020617;
+    --hr-bg-sidebar: #020617;
+    --hr-bg-sidebar-hover: rgba(148, 163, 184, 0.12);
+    --hr-bg-sidebar-active: rgba(148, 163, 184, 0.18);
     --hr-bg-card: var(--hr-gray-900);
     --hr-bg-input: var(--hr-gray-800);
-    --hr-border: var(--hr-gray-700);
-    --hr-border-sidebar: rgba(255, 255, 255, 0.08);
+    --hr-border: var(--hr-gray-800);
+    --hr-border-sidebar: rgba(15, 23, 42, 0.7);
     --hr-text: var(--hr-gray-50);
     --hr-text-muted: var(--hr-gray-400);
     --hr-text-sidebar: var(--hr-gray-50);
     --hr-text-sidebar-muted: var(--hr-gray-400);
-    --hr-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --hr-shadow: 0 18px 45px rgba(0, 0, 0, 0.6);
 
     /* --- Semantic (readable on dark) --- */
-    --hr-primary-light: rgba(59, 130, 246, 0.2);
-    --hr-success-light: rgba(34, 197, 94, 0.2);
+    --hr-primary-light: rgba(59, 130, 246, 0.35);
+    --hr-success-light: rgba(34, 197, 94, 0.35);
     --hr-success-text: var(--hr-green-300);
-    --hr-warning-light: rgba(249, 115, 22, 0.2);
+    --hr-warning-light: rgba(249, 115, 22, 0.35);
     --hr-warning-text: var(--hr-orange-300);
-    --hr-danger-light: rgba(239, 68, 68, 0.2);
+    --hr-danger-light: rgba(239, 68, 68, 0.35);
     --hr-danger-text: var(--hr-red-300);
     --hr-neutral-light: var(--hr-gray-800);
     --hr-neutral-text: var(--hr-gray-300);
-    --hr-info-light: rgba(59, 130, 246, 0.2);
+    --hr-info-light: rgba(59, 130, 246, 0.35);
 }
