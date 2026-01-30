@@ -1,25 +1,16 @@
 <?php
 /**
- * Admin Portal — Administration, Evaluation & Assessments
+ * Human Resource Portal — Administration, Evaluation & Assessments (alternate URL)
  * Routes: ?page=dashboard | employees | reporting | ...
-<<<<<<< HEAD:public/human-resource/index.php
  * Middleware: Session → Auth → Role. CSRF verified on POST.
-=======
- * Requires session (redirect to / if not logged in).
- * For Hiring use /hr/.
->>>>>>> 1fae824f460fdd9bda35bcd72d7eb765515b9038:public/admin/index.php
+ * Same roles as /admin/. For Hiring (hr role only) use /hr/.
  *
  * CONVENTION: JS in assets/js/, CSS in assets/css/, markup in includes/ and pages/.
  */
 declare(strict_types=1);
 
-<<<<<<< HEAD:public/human-resource/index.php
 $hrAdminRoot = __DIR__;
 $appRoot = dirname(__DIR__, 2);
-=======
-$adminRoot = __DIR__;
-$appRoot = dirname(__DIR__, 2); // src/
->>>>>>> 1fae824f460fdd9bda35bcd72d7eb765515b9038:public/admin/index.php
 
 // Bootstrap
 if (is_file($appRoot . '/bootstrap/app.php')) {
@@ -58,21 +49,12 @@ $current_user = AuthMiddleware::user();
 $current_user['role'] = $_SESSION['user_role'] ?? $current_user['role'];
 $current_user['department'] = $_SESSION['department'] ?? $current_user['department'];
 
-<<<<<<< HEAD:public/human-resource/index.php
 $base_url = '/human-resource';
 $assets_url = $base_url . '/assets';
 
 $page_file = $hrAdminRoot . '/pages/' . $page . '.php';
-=======
-// Base URL for admin (no trailing slash)
-$base_url = '/admin';
-$assets_url = $base_url . '/assets';
-
-// Page content file
-$page_file = $adminRoot . '/pages/' . $page . '.php';
->>>>>>> 1fae824f460fdd9bda35bcd72d7eb765515b9038:public/admin/index.php
 if (!is_file($page_file)) {
-    $page_file = $adminRoot . '/pages/dashboard.php';
+    $page_file = $hrAdminRoot . '/pages/dashboard.php';
     $page = 'dashboard';
 }
 
@@ -80,4 +62,4 @@ ob_start();
 include $page_file;
 $page_content = ob_get_clean();
 
-include $adminRoot . '/includes/layout.php';
+include $hrAdminRoot . '/includes/layout.php';
