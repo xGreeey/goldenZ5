@@ -1,0 +1,44 @@
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# AI Configuration (contains API keys)
+/config/ai.php
+
+# Composer
+/vendor/
+composer.phar
+composer.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+/storage/logs/*.log
+/storage/logs/*.txt
+!storage/logs/.gitkeep
+
+# Sessions
+/storage/sessions/*
+!storage/sessions/.gitkeep
+
+# Cache
+/storage/cache/*
+!storage/cache/.gitkeep
+
+# Uploads (optional - uncomment if you don't want to track uploads)
+# /storage/uploads/*
+# !storage/uploads/.gitkeep
+
+# Temporary files
+*.tmp
+*.temp
