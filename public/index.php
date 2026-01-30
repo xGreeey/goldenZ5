@@ -249,83 +249,99 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
         $confirm_password = $_POST['confirm_password'] ?? '';
         $user_id = $_SESSION['temp_user_id'] ?? null;
         
-        // Validate passwords
+        // Validate passwords with strict requirements
         if (empty($new_password) || empty($confirm_password)) {
             $password_change_error = 'Please fill in all password fields.';
         } elseif (strlen($new_password) < 8) {
             $password_change_error = 'Password must be at least 8 characters long.';
         } elseif ($new_password !== $confirm_password) {
             $password_change_error = 'Passwords do not match.';
-        } elseif ($user_id) {
-            try {
-                // Hash new password
-                $new_password_hash = password_hash($new_password, PASSWORD_DEFAULT);
-                
-                // Update password in database using helper function if available
-                if (function_exists('update_user_password')) {
-                    $update_result = update_user_password($user_id, $new_password);
-                } else {
-                    // Fallback: prepared statement only (SQL injection safe)
-                    db_execute('UPDATE users SET password_hash = ?, password_changed_at = NOW() WHERE id = ?', [$new_password_hash, $user_id]);
-                    $update_result = true;
-                }
-                
-                if (!$update_result) {
-                    throw new Exception('Failed to update password in database');
-                }
-                
-                SessionMiddleware::regenerate();
-                // Set session variables for login (no passwords stored)
-                $_SESSION['user_id'] = $_SESSION['temp_user_id'];
-                $_SESSION['user_role'] = $_SESSION['temp_role'];
-                $_SESSION['logged_in'] = true;
-                $_SESSION['username'] = $_SESSION['temp_username'];
-                $_SESSION['name'] = $_SESSION['temp_name'];
-                $_SESSION['employee_id'] = $_SESSION['temp_employee_id'] ?? null;
-                $_SESSION['department'] = $_SESSION['temp_department'] ?? null;
-
-                // Update last login and reset failed attempts
-                db_execute(
-                    'UPDATE users SET last_login = NOW(), last_login_ip = ?, failed_login_attempts = 0, locked_until = NULL WHERE id = ?',
-                    [$_SERVER['REMOTE_ADDR'] ?? null, $user_id]
-                );
-                
-                // Log security event
-                if (function_exists('log_security_event')) {
-                    log_security_event('Password Changed - First Login', "User ID: $user_id - Username: " . ($_SESSION['temp_username'] ?? 'Unknown'));
-                }
-                
-                // Clear temporary session variables
-                unset($_SESSION['temp_user_id'], $_SESSION['temp_username'], $_SESSION['temp_name'], 
-                      $_SESSION['temp_role'], $_SESSION['temp_employee_id'], $_SESSION['temp_department'], 
-                      $_SESSION['require_password_change']);
-
-                csrf_rotate();
-
-                // Redirect based on role (RBA from users.role enum in goldenz_hr.sql)
-                $role = $_SESSION['user_role'];
-                if ($role === 'super_admin') {
-                    header('Location: /super-admin/dashboard');
-                    exit;
-                } elseif ($role === 'developer') {
-                    header('Location: /developer/dashboard');
-                    exit;
-                } elseif ($role === 'humanresource') {
-                    header('Location: /human-resource/dashboard');
-                    exit;
-                } elseif ($role === 'admin') {
-                    header('Location: /admin/dashboard');
-                    exit;
-                } else {
-                    header('Location: /');
-                    exit;
-                }
-            } catch (Exception $e) {
-                $password_change_error = 'Error updating password. Please try again.';
-                error_log('Password change error: ' . $e->getMessage());
-            }
         } else {
-            $password_change_error = 'Invalid request. Please login again.';
+            // Check for mixed characters: uppercase, lowercase, numbers, and symbols
+            $has_uppercase = preg_match('/[A-Z]/', $new_password);
+            $has_lowercase = preg_match('/[a-z]/', $new_password);
+            $has_number = preg_match('/[0-9]/', $new_password);
+            $has_symbol = preg_match('/[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/', $new_password);
+            
+            $missing_requirements = [];
+            if (!$has_uppercase) $missing_requirements[] = 'uppercase letter';
+            if (!$has_lowercase) $missing_requirements[] = 'lowercase letter';
+            if (!$has_number) $missing_requirements[] = 'number';
+            if (!$has_symbol) $missing_requirements[] = 'symbol';
+            
+            if (!empty($missing_requirements)) {
+                $password_change_error = 'Password must contain at least one ' . implode(', ', $missing_requirements) . '.';
+            } elseif ($user_id) {
+                try {
+                    // Hash new password
+                    $new_password_hash = password_hash($new_password, PASSWORD_DEFAULT);
+                    
+                    // Update password in database using helper function if available
+                    if (function_exists('update_user_password')) {
+                        $update_result = update_user_password($user_id, $new_password);
+                    } else {
+                        // Fallback: prepared statement only (SQL injection safe)
+                        db_execute('UPDATE users SET password_hash = ?, password_changed_at = NOW() WHERE id = ?', [$new_password_hash, $user_id]);
+                        $update_result = true;
+                    }
+                    
+                    if (!$update_result) {
+                        throw new Exception('Failed to update password in database');
+                    }
+                    
+                    SessionMiddleware::regenerate();
+                    // Set session variables for login (no passwords stored)
+                    $_SESSION['user_id'] = $_SESSION['temp_user_id'];
+                    $_SESSION['user_role'] = $_SESSION['temp_role'];
+                    $_SESSION['logged_in'] = true;
+                    $_SESSION['username'] = $_SESSION['temp_username'];
+                    $_SESSION['name'] = $_SESSION['temp_name'];
+                    $_SESSION['employee_id'] = $_SESSION['temp_employee_id'] ?? null;
+                    $_SESSION['department'] = $_SESSION['temp_department'] ?? null;
+
+                    // Update last login and reset failed attempts
+                    db_execute(
+                        'UPDATE users SET last_login = NOW(), last_login_ip = ?, failed_login_attempts = 0, locked_until = NULL WHERE id = ?',
+                        [$_SERVER['REMOTE_ADDR'] ?? null, $user_id]
+                    );
+                    
+                    // Log security event
+                    if (function_exists('log_security_event')) {
+                        log_security_event('Password Changed - First Login', "User ID: $user_id - Username: " . ($_SESSION['temp_username'] ?? 'Unknown'));
+                    }
+                    
+                    // Clear temporary session variables
+                    unset($_SESSION['temp_user_id'], $_SESSION['temp_username'], $_SESSION['temp_name'], 
+                          $_SESSION['temp_role'], $_SESSION['temp_employee_id'], $_SESSION['temp_department'], 
+                          $_SESSION['require_password_change']);
+
+                    csrf_rotate();
+
+                    // Redirect based on role (RBA from users.role enum in goldenz_hr.sql)
+                    $role = $_SESSION['user_role'];
+                    if ($role === 'super_admin') {
+                        header('Location: /super-admin/dashboard');
+                        exit;
+                    } elseif ($role === 'developer') {
+                        header('Location: /developer/dashboard');
+                        exit;
+                    } elseif ($role === 'humanresource') {
+                        header('Location: /human-resource/dashboard');
+                        exit;
+                    } elseif ($role === 'admin') {
+                        header('Location: /admin/dashboard');
+                        exit;
+                    } else {
+                        header('Location: /');
+                        exit;
+                    }
+                } catch (Exception $e) {
+                    $password_change_error = 'Error updating password. Please try again.';
+                    error_log('Password change error: ' . $e->getMessage());
+                }
+            } else {
+                $password_change_error = 'Invalid request. Please login again.';
+            }
         }
     }
 }
@@ -360,7 +376,8 @@ $login_status_message = $_SESSION['login_status_message'] ?? '';
 unset($_SESSION['login_status_error']);
 unset($_SESSION['login_status_message']);
 
-$show_password_change_modal = isset($_SESSION['require_password_change']) && $_SESSION['require_password_change'];
+// Check if password change is required (first-time login with temporary password)
+$show_password_change_modal = isset($_SESSION['require_password_change']) && $_SESSION['require_password_change'] === true;
 
 /**
  * REMEMBER ME TOKEN CHECK
@@ -594,14 +611,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                         log_audit_event('LOGIN_ATTEMPT', 'users', $user['id'], null, ['login_time' => date('Y-m-d H:i:s')], $user['id']);
                     }
                     
-                    // First-time password change check DISABLED
-                    // Previously checked if password_changed_at is NULL to force password change
-                    // Now users can login directly without changing password
-                    $is_temporary_password = false; // Disabled - always allow direct login
+                    // First-time password change check - check if password_changed_at is NULL
+                    // New users created by super admin will have password_changed_at = NULL
+                    $is_temporary_password = empty($user['password_changed_at']) || $user['password_changed_at'] === null || $user['password_changed_at'] === '';
                     
                     if ($is_temporary_password) {
                         // First login with temporary password - show password change modal
-                        // This block is now disabled (is_temporary_password always false)
                         $_SESSION['temp_user_id'] = $user['id'];
                         $_SESSION['temp_username'] = $user['username'];
                         $_SESSION['temp_name'] = $user['name'];
@@ -610,12 +625,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                         $_SESSION['temp_department'] = $user['department'] ?? null;
                         $_SESSION['require_password_change'] = true;
                         $debug_info[] = "Temporary password detected - requiring password change";
-                        // Don't redirect, show password change modal instead
+                        
+                        // Don't set logged_in session yet - user must change password first
+                        // Redirect to show password change modal
                         if ($wantsJson) {
                             $respondJson([
                                 'success' => true,
-                                'redirect' => '/' // shows password-change UI when enabled
+                                'require_password_change' => true,
+                                'redirect' => '/' // shows password-change UI
                             ]);
+                        } else {
+                            // For non-JSON requests, redirect to login page to show the modal
+                            header('Location: /');
+                            exit;
                         }
                     } else {
                         // Allowed roles for login (must match users.role enum in goldenz_hr.sql: super_admin, admin, humanresource, accounting, operation, logistics, employee, developer)
@@ -974,6 +996,9 @@ ob_end_flush();
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <link href="/assets/css/login.css" rel="stylesheet">
+    <?php if ($show_password_change_modal): ?>
+    <link href="/assets/css/change_password.css" rel="stylesheet">
+    <?php endif; ?>
 
     <!-- Security Headers -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
@@ -1065,7 +1090,7 @@ ob_end_flush();
 
         <!-- Right Form Panel - Centered Card -->
         <div class="login-form-panel">
-            <div class="auth-form-container reveal-form">
+            <div class="auth-form-container reveal-form" <?php if ($show_password_change_modal): ?>style="opacity: 0.3; pointer-events: none;"<?php endif; ?>>
                 <div class="auth-form-card">
                     <div class="auth-header">
                         <h2 class="auth-title">
@@ -1108,14 +1133,6 @@ ob_end_flush();
                     </div>
                 </div>
                 
-                <?php if ($show_password_change_modal): ?>
-                    <div class="alert alert-info alert-dismissible fade show" role="alert">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Password change required. You must set a new password to continue.
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                <?php endif; ?>
-
                 <?php if (!$show_password_change_modal): ?>
                 <form method="POST" action="" id="loginForm" class="auth-form" novalidate>
                     <input type="hidden" name="login" value="1">
@@ -1425,23 +1442,50 @@ ob_end_flush();
     </div>
     </div>
 
-    <!-- Password Change Modal (shown on first login) -->
+    <!-- Password Change Modal (shown on first login) - FORCED, cannot be dismissed -->
     <?php if ($show_password_change_modal): ?>
-    <div class="modal fade show" id="passwordChangeModal" tabindex="-1" aria-labelledby="passwordChangeModalLabel" aria-modal="true" role="dialog" style="display: block !important; background-color: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="btn btn-link text-decoration-none p-0 me-2 fs-lg" onclick="window.location.href='?logout=1'" aria-label="Back" style="border: none; background: transparent; color: #6b7280;">
-                        <i class="fas fa-arrow-left"></i>
-                    </button>
-                    <h5 class="modal-title mb-0" id="passwordChangeModalLabel">
-                        Set a new password
-                    </h5>
-                </div>
-                <div class="modal-body">
-                    <p class="text-muted mb-4">
-                        Create a strong password to keep your account safe and secure.
+    <div class="modal fade show d-block" id="passwordChangeModal" tabindex="-1" aria-labelledby="passwordChangeModalLabel" aria-modal="true" role="dialog" data-bs-backdrop="static" data-bs-keyboard="false" style="background-color: rgba(0,0,0,0.7) !important; z-index: 99999 !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important;">
+        <!-- Use same layout structure as login form for consistent positioning -->
+        <div class="login-split-container" style="position: relative; z-index: 100000; height: 100%;">
+            <!-- Left panel - keep logo and branding visible -->
+            <div class="login-branded-panel">
+                <div class="branded-content">
+                    <img src="/assets/images/goldenz-logo.jpg" alt="Golden Z-5 Security and Investigation Agency, Inc. Logo" class="branded-logo reveal-item" onerror="this.style.display='none'">
+                    <h1 class="branded-headline reveal-item">Golden Z-5 Security and Investigation Agency, Inc.</h1>
+                    <p class="branded-description reveal-item">
+                        Human Resources Management System<br>
+                        Licensed by PNP-CSG-SAGSD | Registered with SEC
                     </p>
+                </div>
+            </div>
+            
+            <!-- Right panel - same position as login form -->
+            <div class="login-form-panel" style="position: relative; z-index: 100001;">
+                <div class="auth-form-container reveal-form">
+                    <div class="auth-form-card">
+                        <!-- Header matching login form style -->
+                        <div class="auth-header">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <h2 class="auth-title mb-0">
+                                    <i class="fas fa-shield-alt me-2" style="color: #d4af37;"></i>
+                                    Change Your Password
+                                </h2>
+                                <span class="badge bg-warning text-dark" style="font-size: 0.75rem;">Required</span>
+                            </div>
+                            <p class="auth-subtitle">You must change your temporary password to continue</p>
+                        </div>
+                        
+                        <!-- Form content -->
+                        <div class="auth-form">
+                    <div class="alert alert-info mb-4" style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px; border-radius: 6px;">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-info-circle me-2 mt-1" style="color: #3b82f6;"></i>
+                            <div style="font-size: 0.9rem;">
+                                <strong>Security Requirement:</strong> You must change your temporary password before accessing the system. 
+                                Your new password must meet the following requirements:
+                            </div>
+                        </div>
+                    </div>
                     
                     <?php if ($password_change_error): ?>
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -1451,60 +1495,106 @@ ob_end_flush();
                     </div>
                     <?php endif; ?>
                     
-                    <form method="POST" id="passwordChangeForm">
-                        <input type="hidden" name="change_password" value="1">
-                        <?= csrf_field() ?>
-                        
-                        <div class="form-group mb-3">
-                            <label for="new_password" class="form-label">
-                                New Password
-                            </label>
-                            <div class="input-group password-input-group" style="position: relative;">
-                                <input type="password" 
-                                       class="form-control" 
-                                       id="new_password" 
-                                       name="new_password" 
-                                       placeholder="Create strong password" 
-                                       required 
-                                       autocomplete="new-password"
-                                       minlength="8">
-                                <button class="password-toggle" type="button" id="toggleNewPassword">
-                                    <i class="fas fa-eye" id="toggleNewPasswordIcon"></i>
-                                </button>
-                            </div>
-                            <small class="text-muted fs-13">Must be at least 8 characters long</small>
-                        </div>
+                            <form method="POST" id="passwordChangeForm">
+                                <input type="hidden" name="change_password" value="1">
+                                <?= csrf_field() ?>
+                                
+                                <div class="form-group">
+                                <label for="new_password" class="form-label">
+                                    New Password
+                                    <span class="required-indicator" aria-label="Required">*</span>
+                                </label>
+                                <div class="input-wrapper">
+                                    <div class="input-icon">
+                                        <i class="fas fa-lock"></i>
+                                    </div>
+                                    <input type="password" 
+                                           class="form-control" 
+                                           id="new_password" 
+                                           name="new_password" 
+                                           placeholder="Enter your new password" 
+                                           required 
+                                           autocomplete="new-password"
+                                           minlength="8">
+                                    <button class="password-toggle" type="button" id="toggleNewPassword" aria-label="Toggle password visibility">
+                                        <i class="fas fa-eye" id="toggleNewPasswordIcon"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Password Strength Bar -->
+                                <div class="password-strength-container mt-2">
+                                    <div class="password-strength-bar-wrapper">
+                                        <div class="password-strength-bar">
+                                            <div class="password-strength-fill" id="passwordStrengthFill"></div>
+                                        </div>
+                                        <div class="password-strength-text" id="passwordStrengthText">Enter a password</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Password Requirements Checklist -->
+                                <div class="password-requirements mt-2">
+                                    <div class="requirement-item" id="req-length">
+                                        <i class="fas fa-circle requirement-icon"></i>
+                                        <span>8+ characters</span>
+                                    </div>
+                                    <div class="requirement-item" id="req-uppercase">
+                                        <i class="fas fa-circle requirement-icon"></i>
+                                        <span>Uppercase (A-Z)</span>
+                                    </div>
+                                    <div class="requirement-item" id="req-lowercase">
+                                        <i class="fas fa-circle requirement-icon"></i>
+                                        <span>Lowercase (a-z)</span>
+                                    </div>
+                                    <div class="requirement-item" id="req-number">
+                                        <i class="fas fa-circle requirement-icon"></i>
+                                        <span>Number (0-9)</span>
+                                    </div>
+                                    <div class="requirement-item" id="req-symbol">
+                                        <i class="fas fa-circle requirement-icon"></i>
+                                        <span>Symbol (!@#$...)</span>
+                                    </div>
+                                </div>
+                                </div>
 
-                        <div class="form-group mb-4">
-                            <label for="confirm_password" class="form-label">
-                                Confirm New Password
-                            </label>
-                            <div class="input-group password-input-group" style="position: relative;">
-                                <input type="password" 
-                                       class="form-control" 
-                                       id="confirm_password" 
-                                       name="confirm_password" 
-                                       placeholder="Re-enter your new password" 
-                                       required 
-                                       autocomplete="new-password"
-                                       minlength="8">
-                                <button class="password-toggle" type="button" id="toggleConfirmPassword">
-                                    <i class="fas fa-eye" id="toggleConfirmPasswordIcon"></i>
-                                </button>
-                            </div>
-                        </div>
+                                <div class="form-group">
+                                <label for="confirm_password" class="form-label">
+                                    Confirm New Password
+                                    <span class="required-indicator" aria-label="Required">*</span>
+                                </label>
+                                <div class="input-wrapper">
+                                    <div class="input-icon">
+                                        <i class="fas fa-lock"></i>
+                                    </div>
+                                    <input type="password" 
+                                           class="form-control" 
+                                           id="confirm_password" 
+                                           name="confirm_password" 
+                                           placeholder="Re-enter your new password" 
+                                           required 
+                                           autocomplete="new-password"
+                                           minlength="8">
+                                    <button class="password-toggle" type="button" id="toggleConfirmPassword" aria-label="Toggle password visibility">
+                                        <i class="fas fa-eye" id="toggleConfirmPasswordIcon"></i>
+                                    </button>
+                                </div>
+                                    <div class="password-match-indicator mt-2" id="passwordMatchIndicator" style="display: none;">
+                                        <i class="fas fa-check-circle text-success me-1"></i>
+                                        <span class="text-success">Passwords match</span>
+                                    </div>
+                                </div>
 
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg" id="changePasswordBtn">
-                                Create New Password
-                            </button>
+                                <div class="form-submit">
+                                    <button type="submit" class="btn btn-block" id="changePasswordBtn" disabled>
+                                        <span class="btn-text">
+                                            <i class="fas fa-key me-2"></i>
+                                            Change Password
+                                        </span>
+                                        <span class="btn-spinner d-none" aria-hidden="true"><i class="fas fa-spinner fa-spin"></i></span>
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <p class="text-center text-muted small mb-0" style="width: 100%;">
-                        Remembered it? <a href="?logout=1">Login</a>
-                    </p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1514,6 +1604,9 @@ ob_end_flush();
     <!-- JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/assets/js/login.js"></script>
+    <?php if ($show_password_change_modal): ?>
+    <script src="/assets/js/change_password.js"></script>
+    <?php endif; ?>
     <!-- Login/AI-help logic is in /assets/js/login.js -->
 
     <!-- Futuristic Status Error Modal -->

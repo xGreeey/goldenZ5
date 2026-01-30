@@ -98,6 +98,7 @@ ob_end_flush();
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <link href="/assets/css/login.css" rel="stylesheet">
+    <link href="/assets/css/forgot_password.css" rel="stylesheet">
     
     <!-- Security Headers -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
@@ -159,11 +160,11 @@ ob_end_flush();
                         <div class="text-center">
                             <div class="mb-4">
                                 <?php if ($forgot_success): ?>
-                                    <div class="d-inline-flex align-items-center justify-content-center" style="width: 72px; height: 72px; border-radius: 50%; background: #f0fdf4; border: 2px solid #bbf7d0; color: #166534; font-size: 2.25rem;">
+                                    <div class="d-inline-flex align-items-center justify-content-center forgot-password-icon-success">
                                         <i class="fas fa-check-circle"></i>
                                     </div>
                                 <?php else: ?>
-                                    <div class="d-inline-flex align-items-center justify-content-center" style="width: 72px; height: 72px; border-radius: 50%; background: #fef2f2; border: 2px solid #fecaca; color: #991b1b; font-size: 2.25rem;">
+                                    <div class="d-inline-flex align-items-center justify-content-center forgot-password-icon-error">
                                         <i class="fas fa-exclamation-circle"></i>
                                     </div>
                                 <?php endif; ?>
@@ -171,10 +172,10 @@ ob_end_flush();
                             <h2 class="auth-title mb-3">
                                 <?= $forgot_success ? 'Request received' : 'Please try again' ?>
                             </h2>
-                            <p class="auth-subtitle mb-4" style="color: var(--text-muted);">
+                            <p class="auth-subtitle mb-4 forgot-password-result-subtitle">
                                 <?= htmlspecialchars($forgot_message, ENT_QUOTES, 'UTF-8') ?>
                             </p>
-                            <a href="/" class="btn btn-block" style="background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dark) 100%); color: var(--bg-dark); border: none; border-radius: 10px; padding: 0.85rem 1.5rem; font-weight: 600;">
+                            <a href="/" class="btn btn-block forgot-password-back-btn">
                                 <span>Back to sign in</span>
                                 <i class="fas fa-arrow-right ms-2" aria-hidden="true"></i>
                             </a>
@@ -183,7 +184,7 @@ ob_end_flush();
                         <!-- Form State -->
                         <div class="auth-header">
                             <div class="text-center mb-4">
-                                <div class="d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px; background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold-primary) 100%); border-radius: 16px; color: var(--charcoal); font-size: 1.75rem;">
+                                <div class="d-inline-flex align-items-center justify-content-center mb-3 forgot-password-header-icon">
                                     <i class="fas fa-key"></i>
                                 </div>
                             </div>
@@ -213,7 +214,7 @@ ob_end_flush();
                                            maxlength="100"
                                            value="<?= isset($_POST['forgot_username']) ? htmlspecialchars($_POST['forgot_username'], ENT_QUOTES, 'UTF-8') : '' ?>">
                                 </div>
-                                <span class="form-error" id="forgotUsernameError" role="alert" aria-live="polite" style="display: none; font-size: 0.85rem; color: #dc2626; margin-top: 0.25rem;"></span>
+                                <span class="form-error forgot-password-error" id="forgotUsernameError" role="alert" aria-live="polite"></span>
                             </div>
 
                             <div class="form-submit">
@@ -237,72 +238,14 @@ ob_end_flush();
     </div>
 
     <!-- Footer -->
-    <footer style="position: relative; z-index: 1; padding: 1.5rem; text-align: center;">
-        <p style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.5); margin: 0;">
+    <footer class="forgot-password-footer">
+        <p>
             Golden Z-5 Security and Investigation Agency, Inc. · HR Management System
         </p>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/assets/js/login.js"></script>
-    <script nonce="<?= htmlspecialchars($cspNonce) ?>">
-    // Forgot password form validation (reuse login.js patterns)
-    (function () {
-        const form = document.getElementById('forgotPasswordForm');
-        if (!form) return;
-        
-        const usernameInput = document.getElementById('forgot_username');
-        const usernameError = document.getElementById('forgotUsernameError');
-        const submitBtn = document.getElementById('forgotSubmitBtn');
-        
-        function showError(el, message) {
-            if (!el) return;
-            el.textContent = message;
-            el.style.display = message ? 'block' : 'none';
-        }
-        
-        function validateUsername() {
-            const value = usernameInput ? usernameInput.value.trim() : '';
-            if (value.length === 0) {
-                showError(usernameError, 'Please enter your username.');
-                if (usernameInput) usernameInput.setAttribute('aria-invalid', 'true');
-                return false;
-            }
-            showError(usernameError, '');
-            if (usernameInput) usernameInput.setAttribute('aria-invalid', 'false');
-            return true;
-        }
-        
-        if (usernameInput) {
-            usernameInput.addEventListener('blur', function () {
-                if (usernameInput.value.trim().length > 0) {
-                    validateUsername();
-                }
-            });
-            
-            usernameInput.addEventListener('input', function () {
-                if (usernameError && usernameError.textContent) {
-                    validateUsername();
-                }
-            });
-        }
-        
-        form.addEventListener('submit', function (e) {
-            if (!validateUsername()) {
-                e.preventDefault();
-                if (usernameInput) usernameInput.focus();
-                return;
-            }
-            
-            if (submitBtn) {
-                const btnText = submitBtn.querySelector('.btn-text');
-                const btnSpinner = submitBtn.querySelector('.btn-spinner');
-                if (btnText) btnText.classList.add('d-none');
-                if (btnSpinner) btnSpinner.classList.remove('d-none');
-                submitBtn.disabled = true;
-            }
-        });
-    })();
-    </script>
+    <script src="/assets/js/forgot_password.js"></script>
 </body>
 </html>

@@ -274,6 +274,10 @@ $recent_users = db_fetch_all('SELECT id, username, email, name, role, status, cr
                 <form method="POST" class="portal-form portal-form-compact" id="createUserForm">
                     <?php echo csrf_field(); ?>
                     <input type="hidden" name="create_user" value="1">
+                    <?php 
+                    // Don't populate form fields if user was successfully created
+                    $populateFields = empty($success_message);
+                    ?>
 
                     <div class="portal-form-row">
                         <div class="portal-form-group">
@@ -286,7 +290,7 @@ $recent_users = db_fetch_all('SELECT id, username, email, name, role, status, cr
                                    class="portal-form-input" 
                                    required 
                                    maxlength="50"
-                                   value="<?php echo isset($_POST['username']) ? htmlspecialchars($_POST['username']) : ''; ?>"
+                                   value="<?php echo ($populateFields && isset($_POST['username'])) ? htmlspecialchars($_POST['username']) : ''; ?>"
                                    placeholder="Enter username">
                         </div>
 
@@ -300,7 +304,7 @@ $recent_users = db_fetch_all('SELECT id, username, email, name, role, status, cr
                                    class="portal-form-input" 
                                    required 
                                    maxlength="100"
-                                   value="<?php echo isset($_POST['name']) ? htmlspecialchars($_POST['name']) : ''; ?>"
+                                   value="<?php echo ($populateFields && isset($_POST['name'])) ? htmlspecialchars($_POST['name']) : ''; ?>"
                                    placeholder="Enter full name">
                         </div>
                     </div>
@@ -315,7 +319,7 @@ $recent_users = db_fetch_all('SELECT id, username, email, name, role, status, cr
                                class="portal-form-input" 
                                required 
                                maxlength="100"
-                               value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>"
+                               value="<?php echo ($populateFields && isset($_POST['email'])) ? htmlspecialchars($_POST['email']) : ''; ?>"
                                placeholder="user@example.com">
                         <small class="portal-form-hint">Password will be sent to this email</small>
                     </div>
@@ -326,14 +330,14 @@ $recent_users = db_fetch_all('SELECT id, username, email, name, role, status, cr
                                 Role <span class="required-indicator">*</span>
                             </label>
                             <select id="role" name="role" class="portal-form-input" required>
-                                <option value="employee" <?php echo (isset($_POST['role']) && $_POST['role'] === 'employee') ? 'selected' : ''; ?>>Employee</option>
-                                <option value="admin" <?php echo (isset($_POST['role']) && $_POST['role'] === 'admin') ? 'selected' : ''; ?>>Admin</option>
-                                <option value="humanresource" <?php echo (isset($_POST['role']) && $_POST['role'] === 'humanresource') ? 'selected' : ''; ?>>Human Resource</option>
-                                <option value="accounting" <?php echo (isset($_POST['role']) && $_POST['role'] === 'accounting') ? 'selected' : ''; ?>>Accounting</option>
-                                <option value="operation" <?php echo (isset($_POST['role']) && $_POST['role'] === 'operation') ? 'selected' : ''; ?>>Operation</option>
-                                <option value="logistics" <?php echo (isset($_POST['role']) && $_POST['role'] === 'logistics') ? 'selected' : ''; ?>>Logistics</option>
-                                <option value="developer" <?php echo (isset($_POST['role']) && $_POST['role'] === 'developer') ? 'selected' : ''; ?>>Developer</option>
-                                <option value="super_admin" <?php echo (isset($_POST['role']) && $_POST['role'] === 'super_admin') ? 'selected' : ''; ?>>Super Admin</option>
+                                <option value="employee" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'employee') ? 'selected' : 'selected'; ?>>Employee</option>
+                                <option value="admin" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'admin') ? 'selected' : ''; ?>>Admin</option>
+                                <option value="humanresource" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'humanresource') ? 'selected' : ''; ?>>Human Resource</option>
+                                <option value="accounting" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'accounting') ? 'selected' : ''; ?>>Accounting</option>
+                                <option value="operation" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'operation') ? 'selected' : ''; ?>>Operation</option>
+                                <option value="logistics" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'logistics') ? 'selected' : ''; ?>>Logistics</option>
+                                <option value="developer" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'developer') ? 'selected' : ''; ?>>Developer</option>
+                                <option value="super_admin" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'super_admin') ? 'selected' : ''; ?>>Super Admin</option>
                             </select>
                         </div>
 
@@ -342,9 +346,9 @@ $recent_users = db_fetch_all('SELECT id, username, email, name, role, status, cr
                                 Status <span class="required-indicator">*</span>
                             </label>
                             <select id="status" name="status" class="portal-form-input" required>
-                                <option value="active" <?php echo (isset($_POST['status']) && $_POST['status'] === 'active') ? 'selected' : 'selected'; ?>>Active</option>
-                                <option value="inactive" <?php echo (isset($_POST['status']) && $_POST['status'] === 'inactive') ? 'selected' : ''; ?>>Inactive</option>
-                                <option value="suspended" <?php echo (isset($_POST['status']) && $_POST['status'] === 'suspended') ? 'selected' : ''; ?>>Suspended</option>
+                                <option value="active" <?php echo ($populateFields && isset($_POST['status']) && $_POST['status'] === 'active') ? 'selected' : 'selected'; ?>>Active</option>
+                                <option value="inactive" <?php echo ($populateFields && isset($_POST['status']) && $_POST['status'] === 'inactive') ? 'selected' : ''; ?>>Inactive</option>
+                                <option value="suspended" <?php echo ($populateFields && isset($_POST['status']) && $_POST['status'] === 'suspended') ? 'selected' : ''; ?>>Suspended</option>
                             </select>
                         </div>
                     </div>
@@ -356,7 +360,7 @@ $recent_users = db_fetch_all('SELECT id, username, email, name, role, status, cr
                                    id="employee_id" 
                                    name="employee_id" 
                                    class="portal-form-input"
-                                   value="<?php echo isset($_POST['employee_id']) ? htmlspecialchars($_POST['employee_id']) : ''; ?>"
+                                   value="<?php echo ($populateFields && isset($_POST['employee_id'])) ? htmlspecialchars($_POST['employee_id']) : ''; ?>"
                                    placeholder="Optional">
                         </div>
 
@@ -367,7 +371,7 @@ $recent_users = db_fetch_all('SELECT id, username, email, name, role, status, cr
                                    name="department" 
                                    class="portal-form-input"
                                    maxlength="100"
-                                   value="<?php echo isset($_POST['department']) ? htmlspecialchars($_POST['department']) : ''; ?>"
+                                   value="<?php echo ($populateFields && isset($_POST['department'])) ? htmlspecialchars($_POST['department']) : ''; ?>"
                                    placeholder="Optional">
                         </div>
                     </div>
@@ -379,7 +383,7 @@ $recent_users = db_fetch_all('SELECT id, username, email, name, role, status, cr
                                name="phone" 
                                class="portal-form-input"
                                maxlength="20"
-                               value="<?php echo isset($_POST['phone']) ? htmlspecialchars($_POST['phone']) : ''; ?>"
+                               value="<?php echo ($populateFields && isset($_POST['phone'])) ? htmlspecialchars($_POST['phone']) : ''; ?>"
                                placeholder="Optional">
                     </div>
 
@@ -971,8 +975,31 @@ $recent_users = db_fetch_all('SELECT id, username, email, name, role, status, cr
 (function() {
     'use strict';
     
-    // Auto-hide success alerts after 5 seconds
+    // Clear form fields when user is successfully created
     const successAlert = document.getElementById('successAlert');
+    const createUserForm = document.getElementById('createUserForm');
+    
+    if (successAlert && createUserForm) {
+        // Clear all form fields
+        createUserForm.reset();
+        
+        // Also clear any values that might be set via PHP (for extra safety)
+        const formInputs = createUserForm.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], input[type="number"], select');
+        formInputs.forEach(function(input) {
+            if (input.type === 'select-one') {
+                // Reset select to default value
+                if (input.id === 'role') {
+                    input.value = 'employee';
+                } else if (input.id === 'status') {
+                    input.value = 'active';
+                }
+            } else {
+                input.value = '';
+            }
+        });
+    }
+    
+    // Auto-hide success alerts after 5 seconds
     if (successAlert && successAlert.classList.contains('portal-alert-auto-hide')) {
         setTimeout(function() {
             if (successAlert && successAlert.parentNode) {
