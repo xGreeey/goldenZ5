@@ -45,6 +45,10 @@ $current_user_json = $current_user_json ?? '{}';
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Favicon: circular SVG with embedded logo -->
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.php">
+    <link rel="icon" type="image/jpeg" href="/assets/images/goldenz-logo.jpg">
+    <link rel="apple-touch-icon" href="/assets/images/goldenz-logo.jpg">
     <!-- STYLES: single entry portal.css (variables, layout, sidebar, main, components, responsive) -->
     <link href="<?php echo htmlspecialchars($assets_url); ?>/css/portal.css" rel="stylesheet">
     <?php if ($is_super_admin_dashboard): ?>
@@ -80,7 +84,7 @@ $current_user_json = $current_user_json ?? '{}';
                             </a>
                         </li>
                         <li class="portal-sidebar-item">
-                            <a href="<?php echo htmlspecialchars($base_url); ?>#users" class="portal-sidebar-link <?php echo $page === 'users' ? 'active' : ''; ?>" data-sadash-permission="users.manage">
+                            <a href="<?php echo htmlspecialchars($base_url); ?>?page=users" class="portal-sidebar-link <?php echo $page === 'users' ? 'active' : ''; ?>" data-sadash-permission="users.manage">
                                 <i class="fas fa-users" aria-hidden="true"></i>
                                 <span class="portal-sidebar-link-text">Users</span>
                             </a>

@@ -38,7 +38,7 @@ require_once $appRoot . '/includes/security.php';
 $page = isset($_GET['page']) ? trim($_GET['page']) : 'dashboard';
 $page = preg_replace('/[^a-z0-9_-]/i', '', $page) ?: 'dashboard';
 
-$allowed_pages = ['dashboard'];
+$allowed_pages = ['dashboard', 'users'];
 if (!in_array($page, $allowed_pages, true)) {
     $page = 'dashboard';
 }
@@ -70,7 +70,10 @@ if (!is_file($page_file)) {
     $page = 'dashboard';
 }
 
-$page_title = 'Super Admin Dashboard';
+$page_title = match($page) {
+    'users' => 'User Management',
+    default => 'Super Admin Dashboard',
+};
 $is_super_admin_dashboard = ($page === 'dashboard');
 
 // Pass to layout and to dashboard page for JS permission engine
