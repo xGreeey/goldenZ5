@@ -207,6 +207,27 @@ function log_system_event(string $level, string $message, string $category = 'ap
 }
 
 /**
+ * Log employee field change to employee_history (Phase 1).
+ */
+function log_employee_history(
+    int $employee_id,
+    string $field_name,
+    ?string $old_value,
+    ?string $new_value,
+    ?int $changed_by
+): void {
+    try {
+        $pdo = get_db_connection();
+        $stmt = $pdo->prepare(
+            'INSERT INTO employee_history (employee_id, field_name, old_value, new_value, changed_by, changed_at) VALUES (?, ?, ?, ?, ?, NOW())'
+        );
+        $stmt->execute([$employee_id, $field_name, $old_value, $new_value, $changed_by]);
+    } catch (Throwable $e) {
+        error_log('log_employee_history: ' . $e->getMessage());
+    }
+}
+
+/**
  * Create a database backup (for cron). Returns result array.
  * Writes to storage/backups/ and optionally compresses.
  */
