@@ -43,9 +43,18 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 ini_set('log_errors', 1);
 
+$appRoot = __DIR__ . '/..';
 
-// Start session first (before any output) — secure params in config/session.php
-require_once __DIR__ . '/../config/session.php';
+// Bootstrap (load .env) — before any output
+if (is_file($appRoot . '/bootstrap/app.php')) {
+    require_once $appRoot . '/bootstrap/app.php';
+}
+
+// Middleware: session first (uses config/session.php, enforces idle/absolute timeout)
+require_once $appRoot . '/app/middleware/SessionMiddleware.php';
+require_once $appRoot . '/app/middleware/CsrfMiddleware.php';
+require_once $appRoot . '/app/middleware/RateLimitMiddleware.php';
+SessionMiddleware::handle();
 
 // Per-request CSP nonce (used in CSP header and in inline <script nonce="...">)
 $cspNonce = base64_encode(random_bytes(16));
@@ -74,22 +83,9 @@ $cspLines = [
 ];
 header('Content-Security-Policy: ' . implode('; ', $cspLines));
 
-// Bootstrap application (with error handling)
-try {
-    if (file_exists(__DIR__ . '/../bootstrap/app.php')) {
-        require_once __DIR__ . '/../bootstrap/app.php';
-    } else {
-        // Fallback if bootstrap doesn't exist
-        require_once __DIR__ . '/../bootstrap/autoload.php';
-    }
-} catch (Exception $e) {
-    error_log('Bootstrap error: ' . $e->getMessage());
-    // Continue anyway
-}
-
-// Include database and CSRF/security helpers
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../includes/security.php';
+// Database and CSRF/security helpers (csrf_validate, csrf_field, log_security_event)
+require_once $appRoot . '/config/database.php';
+require_once $appRoot . '/includes/security.php';
 
 /**
  * Encryption helper functions for Remember Me password storage
@@ -472,7 +468,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     $debug_info[] = "Username: " . ($username ?: '(empty)');
     $debug_info[] = "Password: " . ($password ? '(provided)' : '(empty)');
     
-    if (empty($username) || empty($password)) {
+    // Rate limit: max 5 login attempts per 10 minutes per username
+    if (!empty($username) && !RateLimitMiddleware::checkLogin($username)) {
+        $error = 'Too many login attempts. Please try again in 10 minutes.';
+        $debug_info[] = "Rate limited: " . $username;
+        if ($wantsJson) {
+            $respondJson(['success' => false, 'error' => 'rate_limited', 'message' => $error], 429);
+        }
+    } elseif (empty($username) || empty($password)) {
         $error = 'Please enter both username and password';
         $debug_info[] = "Validation failed: empty fields";
         if ($wantsJson) {
@@ -650,8 +653,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                                 log_security_event('Login Success', "User: {$user['username']} ({$user['name']}) - Role: {$user['role']} - IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'Unknown'));
                             }
                             
-                            // Regenerate session ID on login to prevent fixation
-                            session_regenerate_id(true);
+                            RateLimitMiddleware::clear($username);
+                            SessionMiddleware::regenerate();
                             // Set session variables (no passwords in session)
                             $_SESSION['user_id'] = $user['id'];
                             $_SESSION['user_role'] = $user['role'];
@@ -831,6 +834,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                         }
                     }
                 } else {
+                    RateLimitMiddleware::recordFail($username);
                     $error = 'Invalid username or password';
                     $debug_info[] = "Password verification failed";
                     if ($wantsJson) {

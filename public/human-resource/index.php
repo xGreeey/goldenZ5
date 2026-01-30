@@ -2,38 +2,39 @@
 /**
  * HR Admin Portal - Entry point
  * Routes: ?page=dashboard | employees | reporting | ...
- * Requires session (redirect to / if not logged in).
+ * Middleware: Session → Auth → Role. CSRF verified on POST.
  *
  * CONVENTION: JS in assets/js/, CSS in assets/css/, markup in includes/ and pages/.
  */
-
 declare(strict_types=1);
 
 $hrAdminRoot = __DIR__;
-$appRoot = dirname(__DIR__, 2); // src/
+$appRoot = dirname(__DIR__, 2);
 
-// Session (must match main app)
-if (session_status() === PHP_SESSION_NONE) {
-    $sessionPath = $appRoot . '/storage/sessions';
-    if (is_dir($sessionPath) || @mkdir($sessionPath, 0755, true)) {
-        session_save_path($sessionPath);
-    }
-    session_start();
-}
-
-// Auth check — roles that can access human-resource portal (RBA from users.role)
-$allowed_roles = ['super_admin', 'hr_admin', 'hr', 'admin', 'accounting', 'operation', 'logistics', 'employee'];
-if (empty($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || !isset($_SESSION['user_role']) ||
-    !in_array($_SESSION['user_role'], $allowed_roles, true)) {
-    header('Location: /');
-    exit;
-}
-
-// Bootstrap & DB
+// Bootstrap
 if (is_file($appRoot . '/bootstrap/app.php')) {
     require_once $appRoot . '/bootstrap/app.php';
 }
+
+// Middleware: session, auth, role
+require_once $appRoot . '/app/middleware/SessionMiddleware.php';
+require_once $appRoot . '/app/middleware/AuthMiddleware.php';
+require_once $appRoot . '/app/middleware/RoleMiddleware.php';
+require_once $appRoot . '/app/middleware/CsrfMiddleware.php';
+
+SessionMiddleware::handle();
+AuthMiddleware::check();
+RoleMiddleware::requireRole(['super_admin', 'hr_admin', 'hr', 'admin', 'accounting', 'operation', 'logistics', 'employee']);
+
+// CSRF for POST (form submissions, uploads)
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+    if (!CsrfMiddleware::verify()) {
+        CsrfMiddleware::reject();
+    }
+}
+
 require_once $appRoot . '/config/database.php';
+require_once $appRoot . '/includes/security.php';
 
 $page = isset($_GET['page']) ? trim($_GET['page']) : 'dashboard';
 $page = preg_replace('/[^a-z0-9_-]/i', '', $page) ?: 'dashboard';
@@ -43,19 +44,13 @@ if (!in_array($page, $allowed_pages, true)) {
     $page = 'dashboard';
 }
 
-$current_user = [
-    'id' => $_SESSION['user_id'] ?? null,
-    'username' => $_SESSION['username'] ?? '',
-    'name' => $_SESSION['name'] ?? '',
-    'role' => $_SESSION['user_role'] ?? '',
-    'department' => $_SESSION['department'] ?? null,
-];
+$current_user = AuthMiddleware::user();
+$current_user['role'] = $_SESSION['user_role'] ?? $current_user['role'];
+$current_user['department'] = $_SESSION['department'] ?? $current_user['department'];
 
-// Base URL for human-resource portal (no trailing slash)
 $base_url = '/human-resource';
 $assets_url = $base_url . '/assets';
 
-// Page content file
 $page_file = $hrAdminRoot . '/pages/' . $page . '.php';
 if (!is_file($page_file)) {
     $page_file = $hrAdminRoot . '/pages/dashboard.php';
