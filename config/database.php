@@ -72,6 +72,64 @@ function get_db_connection(): PDO {
 }
 
 /**
+ * Run a prepared statement (SQL injection safe). All dynamic values must be in $params.
+ * Use ? placeholders in SQL and pass an array of values in order.
+ *
+ * @param string $sql    SQL with ? placeholders (no string concatenation of user input)
+ * @param array  $params Ordered list of bound values
+ * @return PDOStatement
+ * @throws Throwable
+ */
+function db_prepare(string $sql, array $params = []): PDOStatement
+{
+    $pdo = get_db_connection();
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    return $stmt;
+}
+
+/**
+ * Execute SQL (INSERT/UPDATE/DELETE) via prepared statement. Returns true on success.
+ *
+ * @param string $sql    SQL with ? placeholders
+ * @param array  $params Bound values
+ * @return bool
+ */
+function db_execute(string $sql, array $params = []): bool
+{
+    db_prepare($sql, $params);
+    return true;
+}
+
+/**
+ * Run SELECT and fetch one row. Returns associative array or null.
+ *
+ * @param string $sql    SQL with ? placeholders
+ * @param array  $params Bound values
+ * @return array<string, mixed>|null
+ */
+function db_fetch_one(string $sql, array $params = []): ?array
+{
+    $stmt = db_prepare($sql, $params);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $row ?: null;
+}
+
+/**
+ * Run SELECT and fetch all rows. Returns list of associative arrays.
+ *
+ * @param string $sql    SQL with ? placeholders
+ * @param array  $params Bound values
+ * @return array<int, array<string, mixed>>
+ */
+function db_fetch_all(string $sql, array $params = []): array
+{
+    $stmt = db_prepare($sql, $params);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $rows ?: [];
+}
+
+/**
  * Log audit event to audit_logs table (no-op if table missing).
  */
 function log_audit_event(
@@ -83,21 +141,20 @@ function log_audit_event(
     ?int $user_id
 ): void {
     try {
-        $pdo = get_db_connection();
-        $stmt = $pdo->prepare(
+        db_execute(
             'INSERT INTO audit_logs (action, table_name, record_id, old_values, new_values, user_id, ip_address, user_agent, created_at) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())'
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())',
+            [
+                $action,
+                $table_name,
+                $record_id,
+                $old_values ? json_encode($old_values) : null,
+                $new_values ? json_encode($new_values) : null,
+                $user_id,
+                $_SERVER['REMOTE_ADDR'] ?? null,
+                $_SERVER['HTTP_USER_AGENT'] ?? null,
+            ]
         );
-        $stmt->execute([
-            $action,
-            $table_name,
-            $record_id,
-            $old_values ? json_encode($old_values) : null,
-            $new_values ? json_encode($new_values) : null,
-            $user_id,
-            $_SERVER['REMOTE_ADDR'] ?? null,
-            $_SERVER['HTTP_USER_AGENT'] ?? null,
-        ]);
     } catch (Throwable $e) {
         error_log('log_audit_event: ' . $e->getMessage());
     }
@@ -108,20 +165,19 @@ function log_audit_event(
  */
 function log_security_event(string $event, string $details): void {
     try {
-        $pdo = get_db_connection();
-        $stmt = $pdo->prepare(
+        db_execute(
             'INSERT INTO audit_logs (action, table_name, record_id, new_values, user_id, ip_address, user_agent, created_at) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, NOW())'
+             VALUES (?, ?, ?, ?, ?, ?, ?, NOW())',
+            [
+                'SECURITY_' . $event,
+                'security',
+                null,
+                json_encode(['details' => $details]),
+                $_SESSION['user_id'] ?? null,
+                $_SERVER['REMOTE_ADDR'] ?? null,
+                $_SERVER['HTTP_USER_AGENT'] ?? null,
+            ]
         );
-        $stmt->execute([
-            'SECURITY_' . $event,
-            'security',
-            null,
-            json_encode(['details' => $details]),
-            $_SESSION['user_id'] ?? null,
-            $_SERVER['REMOTE_ADDR'] ?? null,
-            $_SERVER['HTTP_USER_AGENT'] ?? null,
-        ]);
     } catch (Throwable $e) {
         error_log('log_security_event: ' . $e->getMessage());
     }
@@ -132,20 +188,19 @@ function log_security_event(string $event, string $details): void {
  */
 function log_system_event(string $level, string $message, string $category = 'app', array $context = []): void {
     try {
-        $pdo = get_db_connection();
-        $stmt = $pdo->prepare(
+        db_execute(
             'INSERT INTO audit_logs (action, table_name, record_id, new_values, user_id, ip_address, user_agent, created_at) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, NOW())'
+             VALUES (?, ?, ?, ?, ?, ?, ?, NOW())',
+            [
+                'SYSTEM_' . strtoupper($level),
+                $category,
+                null,
+                json_encode(['message' => $message, 'context' => $context]),
+                $_SESSION['user_id'] ?? null,
+                $_SERVER['REMOTE_ADDR'] ?? null,
+                $_SERVER['HTTP_USER_AGENT'] ?? null,
+            ]
         );
-        $stmt->execute([
-            'SYSTEM_' . strtoupper($level),
-            $category,
-            null,
-            json_encode(['message' => $message, 'context' => $context]),
-            $_SESSION['user_id'] ?? null,
-            $_SERVER['REMOTE_ADDR'] ?? null,
-            $_SERVER['HTTP_USER_AGENT'] ?? null,
-        ]);
     } catch (Throwable $e) {
         error_log('log_system_event: ' . $e->getMessage());
     }
