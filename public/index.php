@@ -17,10 +17,10 @@
  *    - Updates password_changed_at timestamp
  *    - Auto-logs user in after password change
  * 
- * 3. ROLE-BASED DASHBOARD ACCESS (users.role RBA):
- *    - super_admin → /super-admin/dashboard
- *    - developer → /developer/dashboard
- *    - hr, hr_admin, admin, accounting, operation, logistics, employee → /human-resource/
+ * 3. ROLE-BASED DASHBOARD ACCESS:
+ *    - developer → ../developer/index.php
+ *    - hr_admin, admin, accounting, operation, logistics → /admin (Administration, Evaluation & Assessments)
+ *    - hr → /hr (Hiring)
  *    - Sets session variables: user_id, user_role, username, name, employee_id, department
  * 
  * 4. SECURITY & AUDIT:
@@ -201,13 +201,20 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true && isset($_
         header('Location: /super-admin/dashboard');
         exit;
     }
+    if ($role === 'hr') {
+        header('Location: /hr/');
+        exit;
+    }
+    if ($role === 'hr_admin' || in_array($role, ['admin', 'accounting', 'operation', 'logistics'], true)) {
+        header('Location: /admin/dashboard');
+        exit;
+    }
     if ($role === 'developer') {
         header('Location: /developer/dashboard');
         exit;
     }
-    // human-resource portal: hr, hr_admin, admin, accounting, operation, logistics, employee
-    if (in_array($role, ['hr', 'hr_admin', 'admin', 'accounting', 'operation', 'logistics', 'employee'], true)) {
-        header('Location: /human-resource/');
+    if (in_array($role, ['employee'], true)) {
+        header('Location: /admin/dashboard');
         exit;
     }
 }
@@ -302,8 +309,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                 } elseif ($role === 'developer') {
                     header('Location: /developer/dashboard');
                     exit;
+                } elseif ($role === 'hr') {
+                    header('Location: /hr/');
+                    exit;
                 } else {
-                    header('Location: /human-resource/');
+                    header('Location: /admin/dashboard');
                     exit;
                 }
             } catch (Exception $e) {
@@ -431,8 +441,11 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     } elseif ($user['role'] === 'developer') {
                         header('Location: /developer/dashboard');
                         exit;
+                    } elseif ($user['role'] === 'hr') {
+                        header('Location: /hr/');
+                        exit;
                     } else {
-                        header('Location: /human-resource/');
+                        header('Location: /admin/dashboard');
                         exit;
                     }
                 }
@@ -816,16 +829,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                                 }
                                 header('Location: /developer/dashboard');
                                 exit;
-                            } else {
-                                // human-resource portal: hr, hr_admin, admin, accounting, operation, logistics, employee
-                                $debug_info[] = "Redirecting to: /human-resource/";
+                            } elseif ($user['role'] === 'hr') {
+                                $debug_info[] = "Redirecting to: /hr/";
                                 if ($wantsJson) {
                                     $respondJson([
                                         'success' => true,
-                                        'redirect' => '/human-resource/'
+                                        'redirect' => '/hr/'
                                     ]);
                                 }
-                                header('Location: /human-resource/');
+                                header('Location: /hr/');
+                                exit;
+                            } else {
+                                $debug_info[] = "Redirecting to: /admin/dashboard";
+                                if ($wantsJson) {
+                                    $respondJson([
+                                        'success' => true,
+                                        'redirect' => '/admin/dashboard'
+                                    ]);
+                                }
+                                header('Location: /admin/dashboard');
                                 exit;
                             }
                         }
@@ -919,15 +941,15 @@ ob_end_flush();
     <title>Login</title>
     
     <!-- Favicon: circular SVG with embedded logo (favicon.php) so logo is visible; JPG fallback -->
-    <link rel="icon" type="image/svg+xml" href="assets/favicon.php">
-    <link rel="icon" type="image/jpeg" href="assets/images/goldenz-logo.jpg">
-    <link rel="apple-touch-icon" href="assets/images/goldenz-logo.jpg">
+    <link rel="icon" type="image/svg+xml" href="/admin/assets/favicon.php">
+    <link rel="icon" type="image/jpeg" href="/admin/assets/images/goldenz-logo.jpg">
+    <link rel="apple-touch-icon" href="/admin/assets/images/goldenz-logo.jpg">
 
     <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-    <link href="assets/css/login.css" rel="stylesheet">
+    <link href="/admin/assets/css/login.css" rel="stylesheet">
 
     <!-- Security Headers -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
@@ -993,7 +1015,7 @@ ob_end_flush();
         <!-- Left Branded Panel -->
         <div class="login-branded-panel">
             <div class="branded-content">
-                <img src="assets/images/goldenz-logo.jpg" alt="Golden Z-5 Security and Investigation Agency, Inc. Logo" class="branded-logo reveal-item" onerror="this.style.display='none'">
+                <img src="/admin/assets/images/goldenz-logo.jpg" alt="Golden Z-5 Security and Investigation Agency, Inc. Logo" class="branded-logo reveal-item" onerror="this.style.display='none'">
                 <h1 class="branded-headline reveal-item">Golden Z-5 Security and Investigation Agency, Inc.</h1>
                 <p class="branded-description reveal-item">
                     Human Resources Management System<br>
@@ -1272,7 +1294,7 @@ ob_end_flush();
             </button>
             
             <div class="system-info-header">
-                <img src="assets/images/goldenz-logo.jpg" alt="Golden Z-5 Logo" class="modal-logo" onerror="this.style.display='none'" width="80" height="80">
+                <img src="/admin/assets/images/goldenz-logo.jpg" alt="Golden Z-5 Logo" class="modal-logo" onerror="this.style.display='none'" width="80" height="80">
                 <h2 id="systemInfoTitle">Golden Z-5 HR Management System</h2>
                 <p class="modal-subtitle" id="systemInfoDescription">Comprehensive Workforce Management Solution</p>
             </div>
@@ -1456,8 +1478,8 @@ ob_end_flush();
 
     <!-- JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/js/login.js"></script>
-    <!-- Login/AI-help logic is in assets/js/login.js -->
+    <script src="/admin/assets/js/login.js"></script>
+    <!-- Login/AI-help logic is in /admin/assets/js/login.js -->
 
     <!-- Futuristic Status Error Modal -->
     <div class="modal fade" id="statusErrorModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
