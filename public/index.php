@@ -17,10 +17,10 @@
  *    - Updates password_changed_at timestamp
  *    - Auto-logs user in after password change
  * 
- * 3. ROLE-BASED DASHBOARD ACCESS:
- *    - developer → ../developer/index.php
- *    - hr_admin, admin, accounting, operation, logistics → ../hr-admin/index.php
- *    - hr → ../human-resource/index.php
+ * 3. ROLE-BASED DASHBOARD ACCESS (users.role RBA):
+ *    - super_admin → /super-admin/dashboard
+ *    - developer → /developer/dashboard
+ *    - hr, hr_admin, admin, accounting, operation, logistics, employee → /human-resource/
  *    - Sets session variables: user_id, user_role, username, name, employee_id, department
  * 
  * 4. SECURITY & AUDIT:
@@ -194,23 +194,20 @@ if (isset($_GET['logout']) && $_GET['logout'] == '1') {
     exit;
 }
 
-// If already logged in (and password changed), redirect to appropriate portal
+// If already logged in (and password changed), redirect to appropriate portal (role-based from users.role)
 if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true && isset($_SESSION['user_role']) && !isset($_SESSION['require_password_change'])) {
     $role = $_SESSION['user_role'];
     if ($role === 'super_admin') {
         header('Location: /super-admin/dashboard');
         exit;
     }
-    if ($role === 'hr') {
-        header('Location: /human-resource/');
-        exit;
-    }
-    if ($role === 'hr_admin' || in_array($role, ['admin', 'accounting', 'operation', 'logistics'], true)) {
-        header('Location: /hr-admin/dashboard');
-        exit;
-    }
     if ($role === 'developer') {
         header('Location: /developer/dashboard');
+        exit;
+    }
+    // human-resource portal: hr, hr_admin, admin, accounting, operation, logistics, employee
+    if (in_array($role, ['hr', 'hr_admin', 'admin', 'accounting', 'operation', 'logistics', 'employee'], true)) {
+        header('Location: /human-resource/');
         exit;
     }
 }
@@ -297,7 +294,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
 
                 csrf_rotate();
 
-                // Redirect based on role
+                // Redirect based on role (RBA from users.role)
                 $role = $_SESSION['user_role'];
                 if ($role === 'super_admin') {
                     header('Location: /super-admin/dashboard');
@@ -305,11 +302,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                 } elseif ($role === 'developer') {
                     header('Location: /developer/dashboard');
                     exit;
-                } elseif ($role === 'hr') {
-                    header('Location: /human-resource/');
-                    exit;
                 } else {
-                    header('Location: /hr-admin/dashboard');
+                    header('Location: /human-resource/');
                     exit;
                 }
             } catch (Exception $e) {
@@ -430,18 +424,15 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     // Update last login
                     db_execute('UPDATE users SET last_login = NOW(), last_login_ip = ? WHERE id = ?', [$_SERVER['REMOTE_ADDR'] ?? null, $user['id']]);
                     
-                    // Redirect based on role
+                    // Redirect based on role (RBA from users.role)
                     if ($user['role'] === 'super_admin') {
                         header('Location: /super-admin/dashboard');
                         exit;
                     } elseif ($user['role'] === 'developer') {
                         header('Location: /developer/dashboard');
                         exit;
-                    } elseif ($user['role'] === 'hr') {
-                        header('Location: /human-resource/');
-                        exit;
                     } else {
-                        header('Location: /hr-admin/dashboard');
+                        header('Location: /human-resource/');
                         exit;
                     }
                 }
@@ -601,8 +592,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                             ]);
                         }
                     } else {
-                        // Check role
-                        if (!in_array($user['role'], ['super_admin', 'hr_admin', 'hr', 'admin', 'accounting', 'operation', 'logistics', 'developer'], true)) {
+                        // Allowed roles for login (must match users.role enum: super_admin, hr_admin, hr, admin, accounting, operation, logistics, employee, developer)
+                        if (!in_array($user['role'], ['super_admin', 'hr_admin', 'hr', 'admin', 'accounting', 'operation', 'logistics', 'employee', 'developer'], true)) {
                             $error = 'This account role is not permitted to sign in.';
                             $debug_info[] = "Role not allowed: " . $user['role'];
                             if ($wantsJson) {
@@ -825,7 +816,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                                 }
                                 header('Location: /developer/dashboard');
                                 exit;
-                            } elseif ($user['role'] === 'hr') {
+                            } else {
+                                // human-resource portal: hr, hr_admin, admin, accounting, operation, logistics, employee
                                 $debug_info[] = "Redirecting to: /human-resource/";
                                 if ($wantsJson) {
                                     $respondJson([
@@ -834,17 +826,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                                     ]);
                                 }
                                 header('Location: /human-resource/');
-                                exit;
-                            } else {
-                                // All other roles (hr_admin, admin, accounting, operation, logistics) go to hr-admin portal
-                                $debug_info[] = "Redirecting to: ../hr-admin/dashboard";
-                                if ($wantsJson) {
-                                    $respondJson([
-                                        'success' => true,
-                                        'redirect' => '/hr-admin/dashboard'
-                                    ]);
-                                }
-                                header('Location: /hr-admin/dashboard');
                                 exit;
                             }
                         }

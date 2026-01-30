@@ -12,7 +12,7 @@ if (!isset($page)) {
     $page = 'dashboard';
 }
 if (!isset($base_url)) {
-    $base_url = '/hr-admin';
+    $base_url = '/human-resource';
 }
 if (!isset($assets_url)) {
     $assets_url = $base_url . '/assets';
