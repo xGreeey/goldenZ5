@@ -1215,7 +1215,7 @@ ob_end_flush();
                                 Remember me
                             </label>
                         </div>
-                        <a href="forgot-password.php" class="forgot-password-link" id="resetPasswordLink">
+                        <a href="/forgot-password" class="forgot-password-link" id="resetPasswordLink">
                             <span class="link-text">Forgot password?</span>
                             <span class="link-spinner d-none">
                                 <i class="fas fa-spinner fa-spin"></i>

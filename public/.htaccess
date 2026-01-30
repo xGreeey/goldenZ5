@@ -42,6 +42,9 @@ DirectoryIndex index.php
     RewriteRule ^human-resource/?$ human-resource/index.php [L]
     RewriteRule ^human-resource/([^/]+)/?$ human-resource/index.php?page=$1 [L,QSA]
 
+    # FORGOT PASSWORD route
+    RewriteRule ^forgot-password/?$ forgot-password/forgot-password.php [L]
+
     # Add .php extension internally for clean URLs
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
