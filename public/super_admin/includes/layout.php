@@ -84,7 +84,7 @@ $current_user_json = $current_user_json ?? '{}';
                             </a>
                         </li>
                         <li class="portal-sidebar-item">
-                            <a href="<?php echo htmlspecialchars($base_url); ?>#users" class="portal-sidebar-link <?php echo $page === 'users' ? 'active' : ''; ?>" data-sadash-permission="users.manage">
+                            <a href="<?php echo htmlspecialchars($base_url); ?>?page=users" class="portal-sidebar-link <?php echo $page === 'users' ? 'active' : ''; ?>" data-sadash-permission="users.manage">
                                 <i class="fas fa-users" aria-hidden="true"></i>
                                 <span class="portal-sidebar-link-text">Users</span>
                             </a>
