@@ -1,0 +1,344 @@
+/**
+ * =============================================================================
+ * SUPER ADMIN DASHBOARD — Page-specific styles (.sadash- prefix)
+ * =============================================================================
+ * Matches HR dashboard: same border radius (--hr-radius), shadows (--hr-shadow),
+ * font sizes, spacing, grid. No external libraries.
+ * =============================================================================
+ */
+
+/* --- Page wrapper --- */
+.sadash-page {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+/* --- Section spacing (same as portal-section) --- */
+.sadash-section {
+    margin-bottom: 32px;
+}
+
+.sadash-section .portal-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.sadash-section .portal-section-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--hr-text);
+}
+
+/* --- KPI trend indicators (optional mini-trend) --- */
+.sadash-trend {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 500;
+    margin-left: 6px;
+}
+
+.sadash-trend-up {
+    color: var(--hr-success);
+}
+
+.sadash-trend-down {
+    color: var(--hr-danger);
+}
+
+/* --- Two-column grid (max 2 dense sections per row) --- */
+.sadash-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+}
+
+@media (min-width: 900px) {
+    .sadash-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.sadash-two-col {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+}
+
+@media (min-width: 900px) {
+    .sadash-two-col {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* --- System Health panel (watchlist-style, same card as HR) --- */
+.sadash-health-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sadash-health-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--hr-border);
+    font-size: 14px;
+}
+
+.sadash-health-item:last-of-type {
+    border-bottom: none;
+}
+
+.sadash-health-label {
+    font-weight: 500;
+    color: var(--hr-text);
+}
+
+.sadash-health-status {
+    padding: 4px 10px;
+    border-radius: var(--hr-radius-pill);
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid transparent;
+}
+
+/* Status labels: not color-only (OK / Warn / Down) for accessibility */
+.sadash-status-ok {
+    background: var(--hr-success-light);
+    color: var(--hr-success-text);
+    border-color: var(--hr-success);
+}
+
+[data-theme="dark"] .sadash-status-ok {
+    color: var(--hr-green-300);
+}
+
+.sadash-status-warn {
+    background: var(--hr-warning-light);
+    color: var(--hr-warning-text);
+    border-color: var(--hr-warning);
+}
+
+[data-theme="dark"] .sadash-status-warn {
+    color: var(--hr-orange-300);
+}
+
+.sadash-status-down {
+    background: var(--hr-danger-light);
+    color: var(--hr-danger-text);
+    border-color: var(--hr-danger);
+}
+
+[data-theme="dark"] .sadash-status-down {
+    color: var(--hr-red-300);
+}
+
+.sadash-health-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--hr-text-muted);
+    padding: 4px 0;
+}
+
+.sadash-health-meta-value {
+    color: var(--hr-text);
+    font-weight: 500;
+}
+
+/* --- Access & Permissions quick actions --- */
+.sadash-hint {
+    font-size: 13px;
+    margin: 0 0 16px 0;
+}
+
+.sadash-quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.sadash-quick-actions .portal-btn {
+    flex-shrink: 0;
+}
+
+.sadash-no-access {
+    padding: 12px 0;
+    font-size: 14px;
+    color: var(--hr-text-muted);
+}
+
+/* --- Global Search row --- */
+.sadash-search-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.sadash-search-input-wrap {
+    flex: 1;
+    min-width: 200px;
+    max-width: 360px;
+}
+
+.sadash-search-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.sadash-search-btn:focus-visible {
+    outline: 2px solid var(--hr-primary);
+    outline-offset: 2px;
+}
+
+/* --- Audit / Activity feed (same list style as HR notifications) --- */
+.sadash-activity-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.sadash-activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--hr-border);
+    font-size: 14px;
+}
+
+.sadash-activity-item:last-child {
+    border-bottom: none;
+}
+
+.sadash-activity-icon {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--hr-radius);
+    background: var(--hr-neutral-light);
+    color: var(--hr-text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sadash-activity-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.sadash-activity-title {
+    font-weight: 500;
+    color: var(--hr-text);
+}
+
+.sadash-activity-desc {
+    font-size: 13px;
+    color: var(--hr-text-muted);
+}
+
+.sadash-activity-ts {
+    font-size: 12px;
+    color: var(--hr-text-muted);
+    margin-top: 4px;
+}
+
+.sadash-activity-link {
+    flex-shrink: 0;
+    font-size: 13px;
+}
+
+/* --- Chart placeholders (no chart lib) --- */
+.sadash-chart-placeholder {
+    margin-bottom: 20px;
+}
+
+.sadash-chart-placeholder:last-child {
+    margin-bottom: 0;
+}
+
+.sadash-chart-label {
+    display: block;
+    font-size: 13px;
+    color: var(--hr-text-muted);
+    margin-bottom: 8px;
+}
+
+.sadash-bar-placeholder {
+    display: flex;
+    height: 24px;
+    border-radius: var(--hr-radius);
+    overflow: hidden;
+    background: var(--hr-border);
+}
+
+.sadash-bar-placeholder .sadash-bar {
+    height: 100%;
+    min-width: 4px;
+    transition: width 0.2s ease;
+}
+
+.sadash-bar-active {
+    background: var(--hr-success);
+}
+
+.sadash-bar-inactive {
+    background: var(--hr-gray-400);
+}
+
+.sadash-bar-suspended {
+    background: var(--hr-danger);
+}
+
+.sadash-line-placeholder {
+    height: 120px;
+    border-radius: var(--hr-radius);
+    background: linear-gradient(to top, var(--hr-border) 0%, transparent 100%);
+    border: 1px dashed var(--hr-border);
+}
+
+/* --- Responsive: desktop 3-col → 1 col on mobile --- */
+@media (max-width: 640px) {
+    .sadash-kpi-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .sadash-search-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .sadash-search-input-wrap {
+        max-width: none;
+    }
+
+    .sadash-quick-actions {
+        flex-direction: column;
+    }
+
+    .sadash-quick-actions .portal-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* --- Hidden by permission (JS toggles) --- */
+.sadash-hidden-by-permission {
+    display: none !important;
+}
+
+.sadash-disabled-by-permission {
+    pointer-events: none;
+    opacity: 0.6;
+}

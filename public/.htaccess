@@ -32,9 +32,11 @@ DirectoryIndex index.php
     RewriteRule ^hr/?$ hr/index.php [L]
     RewriteRule ^hr/([^/]+)/?$ hr/index.php?page=$1 [L,QSA]
 
-    # SUPER ADMIN clean routes
-    RewriteRule ^super-admin/?$ super-admin/index.php [L]
-    RewriteRule ^super-admin/([^/]+)/?$ super-admin/index.php?page=$1 [L,QSA]
+    # SUPER ADMIN clean routes (folder may be super_admin with underscore)
+    RewriteRule ^super-admin/?$ super_admin/index.php [L]
+    RewriteRule ^super-admin/([^/]+)/?$ super_admin/index.php?page=$1 [L,QSA]
+    RewriteRule ^super_admin/?$ super_admin/index.php [L]
+    RewriteRule ^super_admin/([^/]+)/?$ super_admin/index.php?page=$1 [L,QSA]
 
     # HUMAN RESOURCE clean routes (hr, hr_admin, employee, etc.)
     RewriteRule ^human-resource/?$ human-resource/index.php [L]

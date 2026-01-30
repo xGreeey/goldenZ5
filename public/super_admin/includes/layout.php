@@ -1,0 +1,304 @@
+<?php
+/**
+ * Admin layout: collapsible sidebar (Untitled UI style) + main content.
+ * Light/dark mode via data-theme on html.
+ *
+ * CONVENTION: Markup only here. No inline <script> or style= ; use .js and .css files.
+ */
+if (!isset($page_content)) {
+    $page_content = '';
+}
+if (!isset($page)) {
+    $page = 'dashboard';
+}
+if (!isset($base_url)) {
+    $base_url = '/admin';
+}
+if (!isset($assets_url)) {
+    $assets_url = $base_url . '/assets';
+}
+if (!isset($current_user) || !is_array($current_user)) {
+    $current_user = [
+        'id' => null,
+        'username' => '',
+        'name' => '',
+        'role' => '',
+        'department' => null,
+    ];
+}
+$page_title = $page_title ?? ucfirst(str_replace(['-', '_'], ' ', $page));
+$is_super_admin_dashboard = $is_super_admin_dashboard ?? false;
+$permissions_json = $permissions_json ?? '[]';
+$current_user_json = $current_user_json ?? '{}';
+?>
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <!-- JS: theme init (head) — all script logic in .js files only -->
+    <script src="<?php echo htmlspecialchars($assets_url); ?>/js/theme-init.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo htmlspecialchars($page_title); ?> · Super Admin · Golden Z-5</title>
+    <!-- Single font: Inter (variables.css --hr-font). Icons: Font Awesome. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- STYLES: single entry portal.css (variables, layout, sidebar, main, components, responsive) -->
+    <link href="<?php echo htmlspecialchars($assets_url); ?>/css/portal.css" rel="stylesheet">
+    <?php if ($is_super_admin_dashboard): ?>
+    <link href="<?php echo htmlspecialchars($assets_url); ?>/css/super_admin_dashboard.css" rel="stylesheet">
+    <?php endif; ?>
+</head>
+<body class="portal-body">
+    <div class="portal-app">
+
+        <!-- =================================================================
+             SIDEBAR (Untitled UI style: brand, nav with labels, section heading, user dropdown)
+             IDs: #portal-sidebar, #sidebarToggle (collapse), #statusTrigger, #statusPopup (system status at bottom), #sidebarOverlay, #themeToggle, #userMenuTrigger, #userMenuPopup
+             ================================================================= -->
+        <aside id="portal-sidebar" class="portal-sidebar portal-sidebar-untitled sidebar" aria-label="Main navigation">
+            <div class="portal-sidebar-inner">
+                <!-- Header: brand + collapse button -->
+                <div class="portal-sidebar-header">
+                    <a href="<?php echo htmlspecialchars($base_url); ?>?page=dashboard" class="portal-sidebar-brand" aria-label="Super Admin — System administration">
+                        <span class="portal-sidebar-brand-text">Super Admin</span>
+                    </a>
+                    <button type="button" class="portal-sidebar-collapse-btn" id="sidebarToggle" aria-label="Collapse sidebar" title="Collapse menu">
+                        <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                    </button>
+                </div>
+
+                <!-- Primary navigation (permission-based visibility via JS: data-sadash-permission) -->
+                <nav class="portal-sidebar-nav" aria-label="Primary">
+                    <ul class="portal-sidebar-list">
+                        <li class="portal-sidebar-item">
+                            <a href="<?php echo htmlspecialchars($base_url); ?>?page=dashboard" class="portal-sidebar-link <?php echo $page === 'dashboard' ? 'active' : ''; ?>" data-sadash-permission="dashboard.view.super_admin">
+                                <i class="fas fa-th-large" aria-hidden="true"></i>
+                                <span class="portal-sidebar-link-text">Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="portal-sidebar-item">
+                            <a href="<?php echo htmlspecialchars($base_url); ?>#users" class="portal-sidebar-link <?php echo $page === 'users' ? 'active' : ''; ?>" data-sadash-permission="users.manage">
+                                <i class="fas fa-users" aria-hidden="true"></i>
+                                <span class="portal-sidebar-link-text">Users</span>
+                            </a>
+                        </li>
+                        <li class="portal-sidebar-item">
+                            <a href="<?php echo htmlspecialchars($base_url); ?>#roles" class="portal-sidebar-link <?php echo $page === 'roles' ? 'active' : ''; ?>" data-sadash-permission-any="roles.manage|permissions.manage.system">
+                                <i class="fas fa-user-shield" aria-hidden="true"></i>
+                                <span class="portal-sidebar-link-text">Roles &amp; Permissions</span>
+                            </a>
+                        </li>
+                        <li class="portal-sidebar-item">
+                            <a href="<?php echo htmlspecialchars($base_url); ?>#system-settings" class="portal-sidebar-link <?php echo $page === 'system-settings' ? 'active' : ''; ?>" data-sadash-permission="system.settings.manage">
+                                <i class="fas fa-cog" aria-hidden="true"></i>
+                                <span class="portal-sidebar-link-text">System Settings</span>
+                            </a>
+                        </li>
+                        <li class="portal-sidebar-item">
+                            <a href="<?php echo htmlspecialchars($base_url); ?>#audit" class="portal-sidebar-link <?php echo $page === 'audit' ? 'active' : ''; ?>" data-sadash-permission="audit.view">
+                                <i class="fas fa-history" aria-hidden="true"></i>
+                                <span class="portal-sidebar-link-text">Audit Logs</span>
+                            </a>
+                        </li>
+                        <li class="portal-sidebar-item">
+                            <a href="<?php echo htmlspecialchars($base_url); ?>#modules" class="portal-sidebar-link <?php echo $page === 'modules' ? 'active' : ''; ?>" data-sadash-permission="modules.enable_disable">
+                                <i class="fas fa-puzzle-piece" aria-hidden="true"></i>
+                                <span class="portal-sidebar-link-text">Modules</span>
+                            </a>
+                        </li>
+                        <li class="portal-sidebar-item">
+                            <a href="<?php echo htmlspecialchars($base_url); ?>#reports" class="portal-sidebar-link <?php echo $page === 'reports' ? 'active' : ''; ?>" data-sadash-permission="reports.view.all">
+                                <i class="fas fa-chart-line" aria-hidden="true"></i>
+                                <span class="portal-sidebar-link-text">Reports</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <!-- Sidebar bottom: system status (Active, Do not disturb, etc.) -->
+                <div class="portal-sidebar-status-wrap">
+                    <button type="button" class="portal-sidebar-status-trigger" id="statusTrigger" aria-haspopup="true" aria-expanded="false" aria-controls="statusPopup" aria-label="System status">
+                        <span class="portal-sidebar-status-dot portal-sidebar-status-dot-active" id="statusDot" aria-hidden="true"></span>
+                        <span class="portal-sidebar-status-label" id="statusLabel">Active</span>
+                        <i class="fas fa-chevron-up portal-sidebar-status-chevron" aria-hidden="true"></i>
+                    </button>
+                </div>
+
+                <!-- User profile (opens dropdown) -->
+                <div class="portal-sidebar-footer">
+                    <button type="button" class="portal-sidebar-user-trigger" id="userMenuTrigger" aria-haspopup="true" aria-expanded="false" aria-controls="userMenuPopup">
+                        <span class="portal-sidebar-user-avatar">
+                            <i class="fas fa-user" aria-hidden="true"></i>
+                        </span>
+                        <span class="portal-sidebar-user-info">
+                            <span class="portal-sidebar-user-name"><?php echo htmlspecialchars($current_user['name'] ?: $current_user['username']); ?></span>
+                            <span class="portal-sidebar-user-meta"><?php echo htmlspecialchars($current_user['role'] ?: 'Admin'); ?></span>
+                        </span>
+                        <i class="fas fa-chevron-up portal-sidebar-user-chevron" aria-hidden="true"></i>
+                    </button>
+
+                </div>
+            </div>
+        </aside>
+
+        <!-- System status dropdown (positioned above status trigger via JS) -->
+        <div id="statusPopup" class="portal-sidebar-status-popup" role="menu" aria-label="System status" hidden>
+            <div class="portal-sidebar-status-popup-inner">
+                <button type="button" class="portal-sidebar-status-option active" data-status="active" role="menuitem">
+                    <span class="portal-sidebar-status-option-dot portal-sidebar-status-dot-active"></span>
+                    <span>Active</span>
+                </button>
+                <button type="button" class="portal-sidebar-status-option" data-status="busy" role="menuitem">
+                    <span class="portal-sidebar-status-option-dot portal-sidebar-status-dot-busy"></span>
+                    <span>Busy</span>
+                </button>
+                <button type="button" class="portal-sidebar-status-option" data-status="dnd" role="menuitem">
+                    <span class="portal-sidebar-status-option-dot portal-sidebar-status-dot-dnd"><i class="fas fa-minus"></i></span>
+                    <span>Do not disturb</span>
+                </button>
+                <button type="button" class="portal-sidebar-status-option" data-status="brb" role="menuitem">
+                    <span class="portal-sidebar-status-option-dot portal-sidebar-status-dot-brb"><i class="fas fa-clock"></i></span>
+                    <span>Be right back</span>
+                </button>
+                <button type="button" class="portal-sidebar-status-option" data-status="away" role="menuitem">
+                    <span class="portal-sidebar-status-option-dot portal-sidebar-status-dot-away"><i class="fas fa-clock"></i></span>
+                    <span>Appear away</span>
+                </button>
+                <button type="button" class="portal-sidebar-status-option" data-status="offline" role="menuitem">
+                    <span class="portal-sidebar-status-option-dot portal-sidebar-status-dot-offline"></span>
+                    <span>Appear offline</span>
+                </button>
+                <div class="portal-sidebar-status-popup-divider"></div>
+                <button type="button" class="portal-sidebar-status-option portal-sidebar-status-reset" data-status="reset" role="menuitem">
+                    <i class="fas fa-sync-alt" aria-hidden="true"></i>
+                    <span>Reset status</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- User dropdown popup (positioned beside sidebar via JS) -->
+        <div id="userMenuPopup" class="portal-sidebar-user-popup" role="menu" aria-label="User menu" hidden>
+            <div class="portal-sidebar-popup-inner">
+                <div class="portal-sidebar-popup-apps">
+                    <a href="<?php echo htmlspecialchars($base_url); ?>?page=dashboard" class="portal-sidebar-popup-app-item active">
+                        <span class="portal-sidebar-popup-app-icon"><i class="fas fa-shield-alt"></i></span>
+                        <div class="portal-sidebar-popup-app-detail">
+                            <span class="portal-sidebar-popup-app-name">Super Admin</span>
+                            <span class="portal-sidebar-popup-app-url">System administration</span>
+                        </div>
+                        <i class="fas fa-check portal-sidebar-popup-app-check" aria-hidden="true"></i>
+                    </a>
+                    <a href="/hr?page=dashboard" class="portal-sidebar-popup-app-item">
+                        <span class="portal-sidebar-popup-app-icon"><i class="fas fa-user-plus"></i></span>
+                        <div class="portal-sidebar-popup-app-detail">
+                            <span class="portal-sidebar-popup-app-name">HR</span>
+                            <span class="portal-sidebar-popup-app-url">Hiring</span>
+                        </div>
+                    </a>
+                    <a href="<?php echo htmlspecialchars($base_url); ?>?page=personal" class="portal-sidebar-popup-app-item">
+                        <span class="portal-sidebar-popup-app-icon"><i class="fas fa-home"></i></span>
+                        <div class="portal-sidebar-popup-app-detail">
+                            <span class="portal-sidebar-popup-app-name">Main site</span>
+                            <span class="portal-sidebar-popup-app-url">Personal dashboard</span>
+                        </div>
+                    </a>
+                </div>
+                <div class="portal-sidebar-popup-divider"></div>
+                <a href="<?php echo htmlspecialchars($base_url); ?>?page=settings" class="portal-sidebar-popup-item">
+                    <i class="fas fa-user" aria-hidden="true"></i>
+                    <span>My profile</span>
+                </a>
+                <button type="button" class="portal-sidebar-popup-item portal-sidebar-popup-item-toggle" id="accountSettingsToggle" aria-expanded="false" aria-controls="accountSettingsPopup">
+                    <i class="fas fa-cog" aria-hidden="true"></i>
+                    <span>Account settings</span>
+                    <i class="fas fa-chevron-right portal-sidebar-popup-arrow" aria-hidden="true"></i>
+                </button>
+                <a href="<?php echo htmlspecialchars($base_url); ?>?page=settings" class="portal-sidebar-popup-item">
+                    <i class="fas fa-mobile-alt" aria-hidden="true"></i>
+                    <span>Device management</span>
+                </a>
+                <button type="button" class="portal-sidebar-popup-item portal-sidebar-popup-item-theme" id="themeToggle" aria-label="Toggle theme">
+                    <i class="fas fa-moon" aria-hidden="true"></i>
+                    <span>Switch theme</span>
+                </button>
+                <div class="portal-sidebar-popup-divider"></div>
+                <a href="/?logout=1" class="portal-sidebar-popup-item portal-sidebar-popup-item-signout">
+                    <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                    <span>Sign out</span>
+                </a>
+                <div class="portal-sidebar-popup-footer">
+                    Golden Z-5 · Admin ©<?php echo date('Y'); ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account settings popup (opens to the right of user menu) -->
+        <div id="accountSettingsPopup" class="portal-sidebar-user-popup portal-sidebar-account-popup" role="menu" aria-label="Account settings" hidden>
+            <div class="portal-sidebar-popup-inner">
+                <div class="portal-sidebar-account-popup-header">
+                    <span class="portal-sidebar-account-popup-title">Account settings</span>
+                    <button type="button" class="portal-sidebar-account-popup-back" id="accountSettingsClose" aria-label="Close account settings">
+                        <i class="fas fa-times" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <a href="<?php echo htmlspecialchars($base_url); ?>?page=settings" class="portal-sidebar-popup-item">
+                    <i class="fas fa-user-circle" aria-hidden="true"></i>
+                    <span>Profile</span>
+                </a>
+                <a href="<?php echo htmlspecialchars($base_url); ?>?page=settings#notifications" class="portal-sidebar-popup-item">
+                    <i class="fas fa-bell" aria-hidden="true"></i>
+                    <span>Notifications</span>
+                </a>
+                <a href="<?php echo htmlspecialchars($base_url); ?>?page=settings#security" class="portal-sidebar-popup-item">
+                    <i class="fas fa-shield-alt" aria-hidden="true"></i>
+                    <span>Security</span>
+                </a>
+                <a href="<?php echo htmlspecialchars($base_url); ?>?page=settings#preferences" class="portal-sidebar-popup-item">
+                    <i class="fas fa-sliders-h" aria-hidden="true"></i>
+                    <span>Preferences</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Overlay when sidebar open on mobile (click to close) -->
+        <div class="portal-sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+        <!-- Mobile: floating menu button (opens sidebar); desktop: hidden -->
+        <button type="button" class="portal-mobile-menu-fab" id="mobileMenuBtn" aria-label="Open menu">
+            <i class="fas fa-bars" aria-hidden="true"></i>
+        </button>
+
+        <main id="portal-main" class="portal-main main-content" role="main">
+            <header class="portal-main-header" role="banner">
+                <div class="portal-main-header-left">
+                    <h1 class="portal-main-header-title"><?php echo htmlspecialchars($page_title); ?></h1>
+                </div>
+                <div class="portal-main-header-actions">
+                    <a href="<?php echo htmlspecialchars($base_url); ?>?page=dashboard#search" class="portal-main-header-icon" aria-label="Global search" title="Global search"><i class="fas fa-search" aria-hidden="true"></i></a>
+                    <a href="<?php echo htmlspecialchars($base_url); ?>#notifications" class="portal-main-header-icon" aria-label="Notifications" title="Notifications"><i class="fas fa-bell" aria-hidden="true"></i></a>
+                    <a href="<?php echo htmlspecialchars($base_url); ?>#audit" class="portal-main-header-icon portal-main-header-schedule" aria-label="Audit logs" title="Audit"><i class="fas fa-history" aria-hidden="true"></i><span>Audit</span></a>
+                    <a href="<?php echo htmlspecialchars($base_url); ?>#users" class="portal-btn portal-btn-primary portal-main-header-cta">
+                        <i class="fas fa-users" aria-hidden="true"></i>
+                        Manage Users
+                    </a>
+                </div>
+            </header>
+            <div class="portal-main-content">
+                <?php echo $page_content; ?>
+            </div>
+        </main>
+    </div>
+    <!-- Permission payload for Super Admin dashboard (replace with session/API when backend ready) -->
+    <?php if ($is_super_admin_dashboard): ?>
+    <script>
+    window.sadashConfig = { permissions: <?php echo $permissions_json; ?>, currentUser: <?php echo $current_user_json; ?> };
+    </script>
+    <script src="<?php echo htmlspecialchars($assets_url); ?>/js/super_admin_dashboard.js"></script>
+    <?php endif; ?>
+    <!-- SCRIPTS: sidebar collapse, theme toggle, mobile menu, submenu expand -->
+    <script src="<?php echo htmlspecialchars($assets_url); ?>/js/portal.js"></script>
+</body>
+</html>
