@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin layout: collapsible sidebar (Untitled UI style) + main content.
+ * HR (Hiring) layout: collapsible sidebar (Untitled UI style) + main content.
  * Light/dark mode via data-theme on html.
  *
  * CONVENTION: Markup only here. No inline <script> or style= ; use .js and .css files.
@@ -12,7 +12,7 @@ if (!isset($page)) {
     $page = 'dashboard';
 }
 if (!isset($base_url)) {
-    $base_url = '/admin';
+    $base_url = '/hr';
 }
 if (!isset($assets_url)) {
     $assets_url = $base_url . '/assets';
@@ -35,7 +35,7 @@ $page_title = $page_title ?? ucfirst(str_replace(['-', '_'], ' ', $page));
     <script src="<?php echo htmlspecialchars($assets_url); ?>/js/theme-init.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($page_title); ?> · Admin · Golden Z-5</title>
+    <title><?php echo htmlspecialchars($page_title); ?> · Recruitment · Golden Z-5</title>
     <!-- Single font: Inter (variables.css --hr-font). Icons: Font Awesome. -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -56,8 +56,8 @@ $page_title = $page_title ?? ucfirst(str_replace(['-', '_'], ' ', $page));
             <div class="portal-sidebar-inner">
                 <!-- Header: brand + collapse button -->
                 <div class="portal-sidebar-header">
-                    <a href="<?php echo htmlspecialchars($base_url); ?>?page=dashboard" class="portal-sidebar-brand" aria-label="Admin — Administration, Evaluation & Assessments">
-                        <span class="portal-sidebar-brand-text">Admin</span>
+                    <a href="<?php echo htmlspecialchars($base_url); ?>?page=dashboard" class="portal-sidebar-brand" aria-label="HR — Hiring">
+                        <span class="portal-sidebar-brand-text">HR (Hiring)</span>
                     </a>
                     <button type="button" class="portal-sidebar-collapse-btn" id="sidebarToggle" aria-label="Collapse sidebar" title="Collapse menu">
                         <i class="fas fa-chevron-left" aria-hidden="true"></i>
@@ -139,7 +139,7 @@ $page_title = $page_title ?? ucfirst(str_replace(['-', '_'], ' ', $page));
                         </span>
                         <span class="portal-sidebar-user-info">
                             <span class="portal-sidebar-user-name"><?php echo htmlspecialchars($current_user['name'] ?: $current_user['username']); ?></span>
-                            <span class="portal-sidebar-user-meta"><?php echo htmlspecialchars($current_user['role'] ?: 'Admin'); ?></span>
+                            <span class="portal-sidebar-user-meta"><?php echo htmlspecialchars($current_user['role'] ?: 'Recruitment'); ?></span>
                         </span>
                         <i class="fas fa-chevron-up portal-sidebar-user-chevron" aria-hidden="true"></i>
                     </button>
@@ -188,18 +188,18 @@ $page_title = $page_title ?? ucfirst(str_replace(['-', '_'], ' ', $page));
             <div class="portal-sidebar-popup-inner">
                 <div class="portal-sidebar-popup-apps">
                     <a href="<?php echo htmlspecialchars($base_url); ?>?page=dashboard" class="portal-sidebar-popup-app-item active">
+                        <span class="portal-sidebar-popup-app-icon"><i class="fas fa-user-plus"></i></span>
+                        <div class="portal-sidebar-popup-app-detail">
+                            <span class="portal-sidebar-popup-app-name">Recruitment</span>
+                            <span class="portal-sidebar-popup-app-url">Hiring</span>
+                        </div>
+                        <i class="fas fa-check portal-sidebar-popup-app-check" aria-hidden="true"></i>
+                    </a>
+                    <a href="/admin?page=dashboard" class="portal-sidebar-popup-app-item">
                         <span class="portal-sidebar-popup-app-icon"><i class="fas fa-clipboard-check"></i></span>
                         <div class="portal-sidebar-popup-app-detail">
                             <span class="portal-sidebar-popup-app-name">Admin</span>
                             <span class="portal-sidebar-popup-app-url">Administration, Evaluation &amp; Assessments</span>
-                        </div>
-                        <i class="fas fa-check portal-sidebar-popup-app-check" aria-hidden="true"></i>
-                    </a>
-                    <a href="/hr?page=dashboard" class="portal-sidebar-popup-app-item">
-                        <span class="portal-sidebar-popup-app-icon"><i class="fas fa-user-plus"></i></span>
-                        <div class="portal-sidebar-popup-app-detail">
-                            <span class="portal-sidebar-popup-app-name">HR</span>
-                            <span class="portal-sidebar-popup-app-url">Hiring</span>
                         </div>
                     </a>
                     <a href="<?php echo htmlspecialchars($base_url); ?>?page=personal" class="portal-sidebar-popup-app-item">
@@ -234,7 +234,7 @@ $page_title = $page_title ?? ucfirst(str_replace(['-', '_'], ' ', $page));
                     <span>Sign out</span>
                 </a>
                 <div class="portal-sidebar-popup-footer">
-                    Golden Z-5 · Admin ©<?php echo date('Y'); ?>
+                    Golden Z-5 · HR (Hiring) ©<?php echo date('Y'); ?>
                 </div>
             </div>
         </div>

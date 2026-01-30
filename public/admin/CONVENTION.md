@@ -1,6 +1,6 @@
-# Admin — Administration, Evaluation & Assessments
+# HR (Hiring) — Separation of JS, HTML, and CSS
 
-This app is for **Admin: Administration, Evaluation & Assessments**. For Hiring use **hr** (`/hr`). Document download is in this folder: `/admin/document-download.php`.
+This app is for **HR (Hiring)**. For Administration, Evaluation & Assessments use **admin** (`/admin`). Document download is in this folder: `/hr/document-download.php`.
 
 **Always keep:**
 
@@ -16,4 +16,4 @@ This app is for **Admin: Administration, Evaluation & Assessments**. For Hiring 
 - **CSS:** `assets/css/portal.css` (entry), plus `variables.css`, `layout.css`, `sidebar.css`, `main.css`, `components.css`, `responsive.css`
 - **HTML:** `includes/layout.php`, `pages/*.php`; entry `index.php` only includes and outputs
 
-This convention applies to all new and changed code in **admin** (administration, evaluation, assessments).
+This convention applies to all new and changed code in **hr** (hiring portal).

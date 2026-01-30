@@ -943,15 +943,15 @@ ob_end_flush();
     <title>Login</title>
     
     <!-- Favicon: circular SVG with embedded logo (favicon.php) so logo is visible; JPG fallback -->
-    <link rel="icon" type="image/svg+xml" href="/admin/assets/favicon.php">
-    <link rel="icon" type="image/jpeg" href="/admin/assets/images/goldenz-logo.jpg">
-    <link rel="apple-touch-icon" href="/admin/assets/images/goldenz-logo.jpg">
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.php">
+    <link rel="icon" type="image/jpeg" href="/assets/images/goldenz-logo.jpg">
+    <link rel="apple-touch-icon" href="/assets/images/goldenz-logo.jpg">
 
     <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-    <link href="/admin/assets/css/login.css" rel="stylesheet">
+    <link href="/assets/css/login.css" rel="stylesheet">
 
     <!-- Security Headers -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
@@ -1017,7 +1017,7 @@ ob_end_flush();
         <!-- Left Branded Panel -->
         <div class="login-branded-panel">
             <div class="branded-content">
-                <img src="/admin/assets/images/goldenz-logo.jpg" alt="Golden Z-5 Security and Investigation Agency, Inc. Logo" class="branded-logo reveal-item" onerror="this.style.display='none'">
+                <img src="/assets/images/goldenz-logo.jpg" alt="Golden Z-5 Security and Investigation Agency, Inc. Logo" class="branded-logo reveal-item" onerror="this.style.display='none'">
                 <h1 class="branded-headline reveal-item">Golden Z-5 Security and Investigation Agency, Inc.</h1>
                 <p class="branded-description reveal-item">
                     Human Resources Management System<br>
@@ -1296,7 +1296,7 @@ ob_end_flush();
             </button>
             
             <div class="system-info-header">
-                <img src="/admin/assets/images/goldenz-logo.jpg" alt="Golden Z-5 Logo" class="modal-logo" onerror="this.style.display='none'" width="80" height="80">
+                <img src="/assets/images/goldenz-logo.jpg" alt="Golden Z-5 Logo" class="modal-logo" onerror="this.style.display='none'" width="80" height="80">
                 <h2 id="systemInfoTitle">Golden Z-5 HR Management System</h2>
                 <p class="modal-subtitle" id="systemInfoDescription">Comprehensive Workforce Management Solution</p>
             </div>
@@ -1480,8 +1480,8 @@ ob_end_flush();
 
     <!-- JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/admin/assets/js/login.js"></script>
-    <!-- Login/AI-help logic is in /admin/assets/js/login.js -->
+    <script src="/assets/js/login.js"></script>
+    <!-- Login/AI-help logic is in /assets/js/login.js -->
 
     <!-- Futuristic Status Error Modal -->
     <div class="modal fade" id="statusErrorModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
