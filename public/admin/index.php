@@ -25,8 +25,8 @@ require_once $appRoot . '/app/middleware/CsrfMiddleware.php';
 
 SessionMiddleware::handle();
 AuthMiddleware::check();
-// Roles that index.php sends to /admin/dashboard (only humanresource can access /human-resource/)
-RoleMiddleware::requireRole(['super_admin', 'admin', 'accounting', 'operation', 'logistics', 'employee']);
+// Only admin role can access admin dashboard (humanresource uses /human-resource/)
+RoleMiddleware::requireRole(['admin']);
 
 // CSRF for POST (form submissions, uploads)
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {

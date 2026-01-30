@@ -20,7 +20,7 @@
  * 3. ROLE-BASED DASHBOARD ACCESS (matches users.role enum in goldenz_hr.sql):
  *    - super_admin → /super-admin/dashboard
  *    - humanresource → /human-resource (Human Resource portal; only this role can access it)
- *    - admin, accounting, operation, logistics, employee → /admin (Administration portal)
+ *    - admin → /admin (Administration portal; only this role can access it)
  *    - developer → /developer/dashboard
  *    - Sets session variables: user_id, user_role, username, name, employee_id, department
  * 
@@ -202,13 +202,22 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true && isset($_
         header('Location: /human-resource/dashboard');
         exit;
     }
-    if (in_array($role, ['admin', 'accounting', 'operation', 'logistics', 'employee'], true)) {
+    if ($role === 'admin') {
         header('Location: /admin/dashboard');
         exit;
     }
     if ($role === 'developer') {
         header('Location: /developer/dashboard');
         exit;
+    }
+}
+
+// Logged in but role has no dashboard (employee, accounting, operation, logistics) — show message on login page
+$no_dashboard_role = false;
+if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true && isset($_SESSION['user_role']) && !isset($_SESSION['require_password_change'])) {
+    $r = $_SESSION['user_role'];
+    if (in_array($r, ['employee', 'accounting', 'operation', 'logistics'], true)) {
+        $no_dashboard_role = true;
     }
 }
 
@@ -304,11 +313,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                 } elseif ($role === 'humanresource') {
                     header('Location: /human-resource/dashboard');
                     exit;
-                } elseif (in_array($role, ['admin', 'accounting', 'operation', 'logistics', 'employee'], true)) {
+                } elseif ($role === 'admin') {
                     header('Location: /admin/dashboard');
                     exit;
                 } else {
-                    header('Location: /admin/dashboard');
+                    header('Location: /');
                     exit;
                 }
             } catch (Exception $e) {
@@ -438,11 +447,11 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     } elseif ($user['role'] === 'humanresource') {
                         header('Location: /human-resource/dashboard');
                         exit;
-                    } elseif (in_array($user['role'], ['admin', 'accounting', 'operation', 'logistics', 'employee'], true)) {
+                    } elseif ($user['role'] === 'admin') {
                         header('Location: /admin/dashboard');
                         exit;
                     } else {
-                        header('Location: /admin/dashboard');
+                        header('Location: /');
                         exit;
                     }
                 }
@@ -843,7 +852,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                                 }
                                 header('Location: /human-resource/dashboard');
                                 exit;
-                            } elseif (in_array($user['role'], ['admin', 'accounting', 'operation', 'logistics', 'employee'], true)) {
+                            } elseif ($user['role'] === 'admin') {
                                 $debug_info[] = "Redirecting to: /admin/dashboard";
                                 if ($wantsJson) {
                                     $respondJson([
@@ -854,14 +863,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                                 header('Location: /admin/dashboard');
                                 exit;
                             } else {
-                                $debug_info[] = "Redirecting to: /admin/dashboard (fallback)";
+                                $debug_info[] = "Redirecting to: / (no dashboard for role)";
                                 if ($wantsJson) {
                                     $respondJson([
                                         'success' => true,
-                                        'redirect' => '/admin/dashboard'
+                                        'redirect' => '/'
                                     ]);
                                 }
-                                header('Location: /admin/dashboard');
+                                header('Location: /');
                                 exit;
                             }
                         }
@@ -1065,7 +1074,18 @@ ob_end_flush();
                         <p class="auth-subtitle">Enter your authorized credentials to access the system</p>
                     </div>
 
-                <?php if ($error && $error !== 'inactive' && $error !== 'suspended'): ?>
+                <?php if (!empty($no_dashboard_role)): ?>
+                    <div class="alert alert-warning" role="alert">
+                        <div class="alert-icon">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div class="alert-content">
+                            <strong>No dashboard access</strong>
+                            <p>Your curreent role does not have a dashboard assigned. Please contact your administrator.</p>
+                            <a href="?logout=1" class="btn btn-sm btn-outline-secondary mt-2">Logout</a>
+                        </div>
+                    </div>
+                <?php elseif ($error && $error !== 'inactive' && $error !== 'suspended'): ?>
                     <div class="alert alert-danger" role="alert">
                         <div class="alert-icon">
                             <i class="fas fa-exclamation-circle"></i>

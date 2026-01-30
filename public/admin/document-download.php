@@ -17,8 +17,8 @@ require_once $appRoot . '/app/middleware/RoleMiddleware.php';
 
 SessionMiddleware::handle();
 AuthMiddleware::check();
-// Admin portal roles (matches users.role enum; humanresource uses /human-resource/document-download.php)
-RoleMiddleware::requireRole(['super_admin', 'admin', 'accounting', 'operation', 'logistics', 'employee']);
+// Only admin role can access admin portal (humanresource uses /human-resource/document-download.php)
+RoleMiddleware::requireRole(['admin']);
 
 $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 if ($id <= 0) {
