@@ -13,9 +13,8 @@ DirectoryIndex index.php
     RewriteCond %{REQUEST_FILENAME} -f
     RewriteRule ^ - [L]
 
-    # Root and /landing/ both serve public/index.php (login page)
+    # Root (/) serves index.php in public folder (login page)
     RewriteRule ^$ index.php [L]
-    RewriteRule ^public/?$ index.php [L]
 
     # Redirect URLs with .php extension to clean URLs (without .php)
     # Exclude root index.php (needed for logout handling)
