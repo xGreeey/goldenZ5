@@ -928,7 +928,7 @@ ob_end_flush();
     <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <link href="assets/css/login.css" rel="stylesheet">
 
     <!-- Security Headers -->
@@ -995,20 +995,20 @@ ob_end_flush();
         <!-- Left Branded Panel -->
         <div class="login-branded-panel">
             <div class="branded-content">
-                <img src="assets/images/goldenz-logo.jpg" alt="Golden Z-5 Security and Investigation Agency, Inc. Logo" class="branded-logo" onerror="this.style.display='none'">
-                <h1 class="branded-headline">Golden Z-5 Security and Investigation Agency, Inc.</h1>
-                <p class="branded-description">
+                <img src="assets/images/goldenz-logo.jpg" alt="Golden Z-5 Security and Investigation Agency, Inc. Logo" class="branded-logo reveal-item" onerror="this.style.display='none'">
+                <h1 class="branded-headline reveal-item">Golden Z-5 Security and Investigation Agency, Inc.</h1>
+                <p class="branded-description reveal-item">
                     Human Resources Management System<br>
                     Licensed by PNP-CSG-SAGSD | Registered with SEC
                 </p>
                 
                 <!-- See More Button -->
-                <button type="button" class="see-more-btn" id="seeMoreBtn" aria-label="View system information and features">
+                <button type="button" class="see-more-btn reveal-item" id="seeMoreBtn" aria-label="View system information and features">
                     <i class="fas fa-info-circle" aria-hidden="true"></i> System Information
                 </button>
                 
                 <!-- Social Links -->
-                <div class="social-links">
+                <div class="social-links reveal-item">
                     <a href="mailto:goldenzfive@yahoo.com.ph" class="social-link" title="Email us">
                         <i class="fas fa-envelope"></i>
                     </a>
@@ -1021,7 +1021,7 @@ ob_end_flush();
 
         <!-- Right Form Panel - Centered Card -->
         <div class="login-form-panel">
-            <div class="auth-form-container">
+            <div class="auth-form-container reveal-form">
                 <div class="auth-form-card">
                     <div class="auth-header">
                         <h2 class="auth-title">
