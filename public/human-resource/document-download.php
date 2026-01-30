@@ -1,7 +1,7 @@
 <?php
 /**
  * Phase 1 — Secure document download. HR/Admin only. Audit logged.
- * Call: /hr-admin/document-download.php?id=<employee_documents.id>
+ * Call: /human-resource/document-download.php?id=<employee_documents.id>
  */
 declare(strict_types=1);
 
@@ -16,7 +16,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-$allowed_roles = ['hr_admin', 'admin', 'accounting', 'operation', 'logistics', 'super_admin'];
+$allowed_roles = ['super_admin', 'hr_admin', 'hr', 'admin', 'accounting', 'operation', 'logistics', 'employee'];
 if (empty($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || !isset($_SESSION['user_role']) ||
     !in_array($_SESSION['user_role'], $allowed_roles, true)) {
     http_response_code(403);

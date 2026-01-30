@@ -21,8 +21,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Auth check
-$allowed_roles = ['hr_admin', 'admin', 'accounting', 'operation', 'logistics', 'super_admin'];
+// Auth check — roles that can access human-resource portal (RBA from users.role)
+$allowed_roles = ['super_admin', 'hr_admin', 'hr', 'admin', 'accounting', 'operation', 'logistics', 'employee'];
 if (empty($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || !isset($_SESSION['user_role']) ||
     !in_array($_SESSION['user_role'], $allowed_roles, true)) {
     header('Location: /');
@@ -51,8 +51,8 @@ $current_user = [
     'department' => $_SESSION['department'] ?? null,
 ];
 
-// Base URL for hr-admin (no trailing slash)
-$base_url = '/hr-admin';
+// Base URL for human-resource portal (no trailing slash)
+$base_url = '/human-resource';
 $assets_url = $base_url . '/assets';
 
 // Page content file

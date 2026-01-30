@@ -32,6 +32,10 @@ DirectoryIndex index.php
     RewriteRule ^super-admin/?$ super-admin/index.php [L]
     RewriteRule ^super-admin/([^/]+)/?$ super-admin/index.php?page=$1 [L,QSA]
 
+    # HUMAN RESOURCE clean routes (hr, hr_admin, employee, etc.)
+    RewriteRule ^human-resource/?$ human-resource/index.php [L]
+    RewriteRule ^human-resource/([^/]+)/?$ human-resource/index.php?page=$1 [L,QSA]
+
     # Add .php extension internally for clean URLs
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
