@@ -14,4 +14,4 @@
 - **CSS:** `assets/css/hr-admin.css` (entry), plus `variables.css`, `layout.css`, `sidebar.css`, `main.css`, `components.css`, `responsive.css`
 - **HTML:** `includes/layout.php`, `pages/*.php`; entry `index.php` only includes and outputs
 
-This convention applies to all new and changed code in hr-admin.
+This convention applies to all new and changed code in hr-admin
