@@ -47,10 +47,32 @@ ini_set('log_errors', 1);
 // Start session first (before any output) — secure params in config/session.php
 require_once __DIR__ . '/../config/session.php';
 
-// Set security headers
+// Per-request CSP nonce (used in CSP header and in inline <script nonce="...">)
+$cspNonce = base64_encode(random_bytes(16));
+
+// Security headers (local HTTPS friendly)
 header('X-Content-Type-Options: nosniff');
-header('X-Frame-Options: DENY');    
-header('X-XSS-Protection: 1; mode=block');
+header('X-Frame-Options: DENY');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (isset($_SERVER['SERVER_PORT']) && (string) $_SERVER['SERVER_PORT'] === '443');
+if ($isHttps) {
+    header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+}
+// CSP: same-origin + CDNs; inline script only via nonce (no unsafe-inline)
+$cspLines = [
+    "default-src 'self'",
+    "script-src 'self' 'nonce-{$cspNonce}' https://cdn.jsdelivr.net",
+    "style-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com",
+    "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com",
+    "img-src 'self' data:",
+    "connect-src 'self'",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+];
+header('Content-Security-Policy: ' . implode('; ', $cspLines));
 
 // Bootstrap application (with error handling)
 try {
@@ -65,8 +87,9 @@ try {
     // Continue anyway
 }
 
-// Include database functions
+// Include database and CSRF/security helpers
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/security.php';
 
 /**
  * Encryption helper functions for Remember Me password storage
@@ -117,10 +140,7 @@ if (isset($_GET['logout']) && $_GET['logout'] == '1') {
     // Clear remember token from database if user is logged in
     if (isset($_SESSION['user_id'])) {
         try {
-            $pdo = get_db_connection();
-            $clear_sql = "UPDATE users SET remember_token = NULL WHERE id = ?";
-            $clear_stmt = $pdo->prepare($clear_sql);
-            $clear_stmt->execute([$_SESSION['user_id']]);
+            db_execute('UPDATE users SET remember_token = NULL WHERE id = ?', [$_SESSION['user_id']]);
         } catch (Exception $e) {
             error_log('Error clearing remember token on logout: ' . $e->getMessage());
         }
@@ -213,7 +233,10 @@ $password_change_error = '';
 $password_change_success = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
-    if (!isset($_SESSION['require_password_change']) || !$_SESSION['require_password_change']) {
+    if (!csrf_validate()) {
+        header('HTTP/1.1 403 Forbidden');
+        $password_change_error = 'Invalid security token. Please refresh the page and try again.';
+    } elseif (!isset($_SESSION['require_password_change']) || !$_SESSION['require_password_change']) {
         $password_change_error = 'Invalid request. Please login again.';
     } else {
         $new_password = $_POST['new_password'] ?? '';
@@ -229,8 +252,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
             $password_change_error = 'Passwords do not match.';
         } elseif ($user_id) {
             try {
-                $pdo = get_db_connection();
-                
                 // Hash new password
                 $new_password_hash = password_hash($new_password, PASSWORD_DEFAULT);
                 
@@ -238,10 +259,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                 if (function_exists('update_user_password')) {
                     $update_result = update_user_password($user_id, $new_password);
                 } else {
-                    // Fallback to direct update
-                    $update_sql = "UPDATE users SET password_hash = ?, password_changed_at = NOW() WHERE id = ?";
-                    $update_stmt = $pdo->prepare($update_sql);
-                    $update_result = $update_stmt->execute([$new_password_hash, $user_id]);
+                    // Fallback: prepared statement only (SQL injection safe)
+                    db_execute('UPDATE users SET password_hash = ?, password_changed_at = NOW() WHERE id = ?', [$new_password_hash, $user_id]);
+                    $update_result = true;
                 }
                 
                 if (!$update_result) {
@@ -260,11 +280,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                 $_SESSION['department'] = $_SESSION['temp_department'] ?? null;
 
                 // Update last login and reset failed attempts
-                $update_login_sql = "UPDATE users SET last_login = NOW(), last_login_ip = ?, 
-                                    failed_login_attempts = 0, locked_until = NULL 
-                                    WHERE id = ?";
-                $update_login_stmt = $pdo->prepare($update_login_sql);
-                $update_login_stmt->execute([$_SERVER['REMOTE_ADDR'] ?? null, $user_id]);
+                db_execute(
+                    'UPDATE users SET last_login = NOW(), last_login_ip = ?, failed_login_attempts = 0, locked_until = NULL WHERE id = ?',
+                    [$_SERVER['REMOTE_ADDR'] ?? null, $user_id]
+                );
                 
                 // Log security event
                 if (function_exists('log_security_event')) {
@@ -275,7 +294,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                 unset($_SESSION['temp_user_id'], $_SESSION['temp_username'], $_SESSION['temp_name'], 
                       $_SESSION['temp_role'], $_SESSION['temp_employee_id'], $_SESSION['temp_department'], 
                       $_SESSION['require_password_change']);
-                
+
+                csrf_rotate();
+
                 // Redirect based on role
                 $role = $_SESSION['user_role'];
                 if ($role === 'super_admin') {
@@ -341,7 +362,6 @@ $show_password_change_modal = isset($_SESSION['require_password_change']) && $_S
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     if (isset($_COOKIE['remember_token']) && !empty($_COOKIE['remember_token'])) {
         try {
-            $pdo = get_db_connection();
             $token_data = $_COOKIE['remember_token'];
             
             // Token format: user_id|token (for optimization) or just token (backward compatibility)
@@ -356,38 +376,25 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
             }
             
             if ($user_id) {
-                // Optimized: Lookup by user_id first
-                $sql = "SELECT id, username, password_hash, name, role, status, employee_id, department, 
-                               remember_token, failed_login_attempts, locked_until, password_changed_at,
-                               two_factor_enabled, two_factor_secret
-                        FROM users 
-                        WHERE id = ? 
-                        AND remember_token IS NOT NULL 
-                        AND remember_token != ''";
-                
-                $stmt = $pdo->prepare($sql);
-                $stmt->execute([$user_id]);
-                $user = $stmt->fetch(PDO::FETCH_ASSOC);
-                
-                if ($user && password_verify($token, $user['remember_token'])) {
-                    // Token verified - proceed with login
-                    $token_valid = true;
-                } else {
-                    $token_valid = false;
-                }
+                // Optimized: Lookup by user_id first (prepared statement - SQL injection safe)
+                $user = db_fetch_one(
+                    "SELECT id, username, password_hash, name, role, status, employee_id, department,
+                            remember_token, failed_login_attempts, locked_until, password_changed_at,
+                            two_factor_enabled, two_factor_secret
+                     FROM users
+                     WHERE id = ? AND remember_token IS NOT NULL AND remember_token != ''",
+                    [$user_id]
+                );
+                $token_valid = $user && password_verify($token, $user['remember_token']);
             } else {
                 // Fallback: Check all users (for backward compatibility with old tokens)
-                $sql = "SELECT id, username, password_hash, name, role, status, employee_id, department, 
-                               remember_token, failed_login_attempts, locked_until, password_changed_at,
-                               two_factor_enabled, two_factor_secret
-                        FROM users 
-                        WHERE remember_token IS NOT NULL 
-                        AND remember_token != ''";
-                
-                $stmt = $pdo->prepare($sql);
-                $stmt->execute();
-                $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                
+                $users = db_fetch_all(
+                    "SELECT id, username, password_hash, name, role, status, employee_id, department,
+                            remember_token, failed_login_attempts, locked_until, password_changed_at,
+                            two_factor_enabled, two_factor_secret
+                     FROM users
+                     WHERE remember_token IS NOT NULL AND remember_token != ''"
+                );
                 $user = null;
                 $token_valid = false;
                 foreach ($users as $u) {
@@ -403,9 +410,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                 // Check user status
                 if ($user['status'] === 'inactive' || $user['status'] === 'suspended') {
                     // Invalid status - clear remember token
-                    $clear_sql = "UPDATE users SET remember_token = NULL WHERE id = ?";
-                    $clear_stmt = $pdo->prepare($clear_sql);
-                    $clear_stmt->execute([$user['id']]);
+                    db_execute('UPDATE users SET remember_token = NULL WHERE id = ?', [$user['id']]);
                     setcookie('remember_token', '', time() - 3600, '/');
                 } elseif (!empty($user['locked_until']) && strtotime($user['locked_until']) > time()) {
                     // Account is locked - don't auto-login
@@ -423,9 +428,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     $_SESSION['department'] = $user['department'] ?? null;
 
                     // Update last login
-                    $update_sql = "UPDATE users SET last_login = NOW(), last_login_ip = ? WHERE id = ?";
-                    $update_stmt = $pdo->prepare($update_sql);
-                    $update_stmt->execute([$_SERVER['REMOTE_ADDR'] ?? null, $user['id']]);
+                    db_execute('UPDATE users SET last_login = NOW(), last_login_ip = ? WHERE id = ?', [$_SERVER['REMOTE_ADDR'] ?? null, $user['id']]);
                     
                     // Redirect based on role
                     if ($user['role'] === 'super_admin') {
@@ -452,11 +455,22 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     $isAjaxRequest = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
     $wantsJson = $isAjaxRequest || (isset($_SERVER['HTTP_ACCEPT']) && stripos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
-    $respondJson = function (array $payload) {
+    $respondJson = function (array $payload, int $statusCode = 200) {
+        if ($statusCode !== 200) {
+            header('HTTP/1.1 ' . (int) $statusCode . ' ' . ($statusCode === 403 ? 'Forbidden' : 'OK'));
+        }
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode($payload);
         exit;
     };
+
+    if (!csrf_validate()) {
+        header('HTTP/1.1 403 Forbidden');
+        if ($wantsJson) {
+            $respondJson(['success' => false, 'error' => 'csrf', 'message' => 'Invalid security token. Please refresh and try again.'], 403);
+        }
+        $error = 'Invalid security token. Please refresh the page and try again.';
+    } else {
 
     $debug_info[] = "POST request received";
     $debug_info[] = "POST data: " . print_r($_POST, true);
@@ -479,21 +493,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
         }
     } else {
         try {
-            $pdo = get_db_connection();
             $debug_info[] = "Database connection successful";
             
-            // Direct database query (simpler, more reliable)
-            // Note: We don't filter by status here so we can check it and show appropriate messages
-            $sql = "SELECT id, username, password_hash, name, role, status, employee_id, department, 
-                           failed_login_attempts, locked_until, password_changed_at,
-                           two_factor_enabled, two_factor_secret
-                    FROM users 
-                    WHERE username = ?
-                    LIMIT 1";
-            
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$username]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            // Lookup user by username (prepared statement - SQL injection safe)
+            $user = db_fetch_one(
+                "SELECT id, username, password_hash, name, role, status, employee_id, department,
+                        failed_login_attempts, locked_until, password_changed_at,
+                        two_factor_enabled, two_factor_secret
+                 FROM users WHERE username = ? LIMIT 1",
+                [$username]
+            );
             
             if ($user) {
                 $debug_info[] = "User found: " . $user['username'] . " (Role: " . $user['role'] . ", Status: " . $user['status'] . ")";
@@ -631,11 +640,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
 
                             // No 2FA required – complete login immediately
                             // Update last login and reset failed attempts
-                            $update_sql = "UPDATE users SET last_login = NOW(), last_login_ip = ?, 
-                                          failed_login_attempts = 0, locked_until = NULL 
-                                          WHERE id = ?";
-                            $update_stmt = $pdo->prepare($update_sql);
-                            $update_stmt->execute([$_SERVER['REMOTE_ADDR'] ?? null, $user['id']]);
+                            db_execute(
+                                'UPDATE users SET last_login = NOW(), last_login_ip = ?, failed_login_attempts = 0, locked_until = NULL WHERE id = ?',
+                                [$_SERVER['REMOTE_ADDR'] ?? null, $user['id']]
+                            );
                             
                             // Log successful login
                             // Log to system logs
@@ -663,7 +671,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                             $_SESSION['department'] = $user['department'] ?? null;
 
                             $debug_info[] = "Session variables set";
-                            
+
+                            csrf_rotate();
+
                             // Handle "Remember Me" functionality
                             $remember_me = isset($_POST['remember_me']) && $_POST['remember_me'] == '1';
                             $cookie_expiry = time() + (7 * 24 * 60 * 60); // 7 days
@@ -678,9 +688,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                                 $hashed_token = password_hash($remember_token, PASSWORD_DEFAULT);
                                 
                                 // Store hashed token in database
-                                $token_sql = "UPDATE users SET remember_token = ? WHERE id = ?";
-                                $token_stmt = $pdo->prepare($token_sql);
-                                $token_stmt->execute([$hashed_token, $user['id']]);
+                                db_execute('UPDATE users SET remember_token = ? WHERE id = ?', [$hashed_token, $user['id']]);
                                 
                                 // Set remember token cookie with 7 days expiry
                                 // Format: user_id|token for optimized lookup
@@ -739,9 +747,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                                 $debug_info[] = "Remember me token set for 7 days";
                             } else {
                                 // Clear any existing remember token if user didn't check remember me
-                                $clear_sql = "UPDATE users SET remember_token = NULL WHERE id = ?";
-                                $clear_stmt = $pdo->prepare($clear_sql);
-                                $clear_stmt->execute([$user['id']]);
+                                db_execute('UPDATE users SET remember_token = NULL WHERE id = ?', [$user['id']]);
                                 
                                 // Clear remember token cookie if it exists
                                 if (isset($_COOKIE['remember_token'])) {
@@ -887,9 +893,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                             log_security_event('Account Locked', "User: {$user['username']} - Locked for 30 minutes due to 5 failed login attempts");
                         }
                     }
-                    $update_sql = "UPDATE users SET failed_login_attempts = ?, locked_until = ? WHERE id = ?";
-                    $update_stmt = $pdo->prepare($update_sql);
-                    $update_stmt->execute([$failed_attempts, $locked_until, $user['id']]);
+                    db_execute('UPDATE users SET failed_login_attempts = ?, locked_until = ? WHERE id = ?', [$failed_attempts, $locked_until, $user['id']]);
                 }
             } else {
                 $error = 'Invalid username or password';
@@ -915,6 +919,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             }
         }
     }
+    }
 }
 
 // Log debug info
@@ -929,6 +934,7 @@ ob_end_flush();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta name="csrf-token" content="<?= htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
     <title>Login</title>
     
     <!-- Favicon: circular SVG with embedded logo (favicon.php) so logo is visible; JPG fallback -->
@@ -1075,7 +1081,7 @@ ob_end_flush();
                 <?php if (!$show_password_change_modal): ?>
                 <form method="POST" action="" id="loginForm" class="auth-form" novalidate>
                     <input type="hidden" name="login" value="1">
-                    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token'] ?? ''; ?>">
+                    <?= csrf_field() ?>
                     
                     <!-- Validation Alert (Hidden by default) -->
                     <div class="system-alert system-alert-warning d-none" id="validationAlert" role="alert">
@@ -1409,6 +1415,7 @@ ob_end_flush();
                     
                     <form method="POST" id="passwordChangeForm">
                         <input type="hidden" name="change_password" value="1">
+                        <?= csrf_field() ?>
                         
                         <div class="form-group mb-3">
                             <label for="new_password" class="form-label">
@@ -1498,7 +1505,7 @@ ob_end_flush();
         </div>
     </div>
 
-    <script>
+    <script nonce="<?= htmlspecialchars($cspNonce, ENT_QUOTES, 'UTF-8') ?>">
         // Show status error modal if status error exists
         <?php if ($login_status_error): ?>
         document.addEventListener('DOMContentLoaded', function() {

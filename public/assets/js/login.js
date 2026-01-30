@@ -479,10 +479,14 @@
         setThinking(true);
 
         var payload = state.history.slice(-6).map(function (item) { return { role: item.role, text: item.text }; });
+        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+        var headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+        if (csrfToken) { headers['X-CSRF-Token'] = csrfToken; }
 
         fetch('/api/ai_help.php', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          headers: headers,
           credentials: 'same-origin',
           body: JSON.stringify({ message: text, history: payload })
         })

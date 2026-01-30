@@ -15,11 +15,11 @@ if (session_status() !== PHP_SESSION_NONE) {
 ini_set('session.use_strict_mode', '1');
 ini_set('session.cookie_httponly', '1');
 
-// HTTPS detection: Secure = true when on HTTPS (localhost can stay false)
+// App deployed on local network with HTTPS only — session cookie must be Secure
 $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
     || (isset($_SERVER['SERVER_PORT']) && (string) $_SERVER['SERVER_PORT'] === '443');
 
-// Cookie params: HttpOnly, SameSite Lax, Secure when HTTPS
+// Cookie params: HttpOnly, SameSite Lax, Secure (true when HTTPS; required for local HTTPS)
 if (PHP_VERSION_ID >= 70300) {
     session_set_cookie_params([
         'lifetime' => 0,
