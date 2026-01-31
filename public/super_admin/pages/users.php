@@ -264,271 +264,324 @@ $recent_users = db_fetch_all('SELECT id, username, email, name, role, status, cr
     </div>
     <?php endif; ?>
 
-    <div class="sadash-grid sadash-two-col">
-        <!-- Create User Form -->
-        <section class="portal-section portal-dashboard-card sadash-section">
-            <div class="portal-section-header">
-                <h2 class="portal-section-title">Create New User</h2>
-            </div>
-            <div class="sadash-panel-content">
-                <form method="POST" class="portal-form portal-form-compact" id="createUserForm">
-                    <?php echo csrf_field(); ?>
-                    <input type="hidden" name="create_user" value="1">
-                    <?php 
-                    // Don't populate form fields if user was successfully created
-                    $populateFields = empty($success_message);
-                    ?>
+    <div class="users-create-grid sadash-grid sadash-two-col">
+        <!-- Left: Create New User + Quick Guidelines -->
+        <div class="users-create-col users-create-col-form">
+            <section class="portal-section portal-dashboard-card sadash-section">
+                <div class="portal-section-header">
+                    <h2 class="portal-section-title">Create New User</h2>
+                </div>
+                <div class="sadash-panel-content">
+                    <form method="POST" class="portal-form portal-form-compact" id="createUserForm">
+                        <?php echo csrf_field(); ?>
+                        <input type="hidden" name="create_user" value="1">
+                        <?php 
+                        $populateFields = empty($success_message);
+                        ?>
 
-                    <div class="portal-form-row">
-                        <div class="portal-form-group">
-                            <label for="username" class="portal-form-label">
-                                Username <span class="required-indicator">*</span>
-                            </label>
-                            <input type="text" 
-                                   id="username" 
-                                   name="username" 
-                                   class="portal-form-input" 
-                                   required 
-                                   maxlength="50"
-                                   value="<?php echo ($populateFields && isset($_POST['username'])) ? htmlspecialchars($_POST['username']) : ''; ?>"
-                                   placeholder="Enter username">
+                        <div class="portal-form-row">
+                            <div class="portal-form-group">
+                                <label for="username" class="portal-form-label">
+                                    Username <span class="required-indicator">*</span>
+                                </label>
+                                <input type="text" 
+                                       id="username" 
+                                       name="username" 
+                                       class="portal-form-input" 
+                                       required 
+                                       maxlength="50"
+                                       value="<?php echo ($populateFields && isset($_POST['username'])) ? htmlspecialchars($_POST['username']) : ''; ?>"
+                                       placeholder="Enter username">
+                            </div>
+
+                            <div class="portal-form-group">
+                                <label for="name" class="portal-form-label">
+                                    Full Name <span class="required-indicator">*</span>
+                                </label>
+                                <input type="text" 
+                                       id="name" 
+                                       name="name" 
+                                       class="portal-form-input" 
+                                       required 
+                                       maxlength="100"
+                                       value="<?php echo ($populateFields && isset($_POST['name'])) ? htmlspecialchars($_POST['name']) : ''; ?>"
+                                       placeholder="Enter full name">
+                            </div>
                         </div>
 
                         <div class="portal-form-group">
-                            <label for="name" class="portal-form-label">
-                                Full Name <span class="required-indicator">*</span>
+                            <label for="email" class="portal-form-label">
+                                Email <span class="required-indicator">*</span>
                             </label>
-                            <input type="text" 
-                                   id="name" 
-                                   name="name" 
+                            <input type="email" 
+                                   id="email" 
+                                   name="email" 
                                    class="portal-form-input" 
                                    required 
                                    maxlength="100"
-                                   value="<?php echo ($populateFields && isset($_POST['name'])) ? htmlspecialchars($_POST['name']) : ''; ?>"
-                                   placeholder="Enter full name">
-                        </div>
-                    </div>
-
-                    <div class="portal-form-group">
-                        <label for="email" class="portal-form-label">
-                            Email <span class="required-indicator">*</span>
-                        </label>
-                        <input type="email" 
-                               id="email" 
-                               name="email" 
-                               class="portal-form-input" 
-                               required 
-                               maxlength="100"
-                               value="<?php echo ($populateFields && isset($_POST['email'])) ? htmlspecialchars($_POST['email']) : ''; ?>"
-                               placeholder="user@example.com">
-                        <small class="portal-form-hint">Password will be sent to this email</small>
-                    </div>
-
-                    <div class="portal-form-row">
-                        <div class="portal-form-group">
-                            <label for="role" class="portal-form-label">
-                                Role <span class="required-indicator">*</span>
-                            </label>
-                            <select id="role" name="role" class="portal-form-input" required>
-                                <option value="employee" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'employee') ? 'selected' : 'selected'; ?>>Employee</option>
-                                <option value="admin" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'admin') ? 'selected' : ''; ?>>Admin</option>
-                                <option value="humanresource" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'humanresource') ? 'selected' : ''; ?>>Human Resource</option>
-                                <option value="accounting" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'accounting') ? 'selected' : ''; ?>>Accounting</option>
-                                <option value="operation" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'operation') ? 'selected' : ''; ?>>Operation</option>
-                                <option value="logistics" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'logistics') ? 'selected' : ''; ?>>Logistics</option>
-                                <option value="developer" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'developer') ? 'selected' : ''; ?>>Developer</option>
-                                <option value="super_admin" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'super_admin') ? 'selected' : ''; ?>>Super Admin</option>
-                            </select>
+                                   value="<?php echo ($populateFields && isset($_POST['email'])) ? htmlspecialchars($_POST['email']) : ''; ?>"
+                                   placeholder="user@example.com">
+                            <small class="portal-form-hint">Password will be sent to this email</small>
                         </div>
 
-                        <div class="portal-form-group">
-                            <label for="status" class="portal-form-label">
-                                Status <span class="required-indicator">*</span>
-                            </label>
-                            <select id="status" name="status" class="portal-form-input" required>
-                                <option value="active" <?php echo ($populateFields && isset($_POST['status']) && $_POST['status'] === 'active') ? 'selected' : 'selected'; ?>>Active</option>
-                                <option value="inactive" <?php echo ($populateFields && isset($_POST['status']) && $_POST['status'] === 'inactive') ? 'selected' : ''; ?>>Inactive</option>
-                                <option value="suspended" <?php echo ($populateFields && isset($_POST['status']) && $_POST['status'] === 'suspended') ? 'selected' : ''; ?>>Suspended</option>
-                            </select>
-                        </div>
-                    </div>
+                        <div class="portal-form-row">
+                            <div class="portal-form-group">
+                                <label for="role" class="portal-form-label">
+                                    Role <span class="required-indicator">*</span>
+                                </label>
+                                <select id="role" name="role" class="portal-form-input" required>
+                                    <option value="employee" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'employee') ? 'selected' : 'selected'; ?>>Employee</option>
+                                    <option value="admin" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'admin') ? 'selected' : ''; ?>>Admin</option>
+                                    <option value="humanresource" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'humanresource') ? 'selected' : ''; ?>>Human Resource</option>
+                                    <option value="accounting" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'accounting') ? 'selected' : ''; ?>>Accounting</option>
+                                    <option value="operation" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'operation') ? 'selected' : ''; ?>>Operation</option>
+                                    <option value="logistics" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'logistics') ? 'selected' : ''; ?>>Logistics</option>
+                                    <option value="developer" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'developer') ? 'selected' : ''; ?>>Developer</option>
+                                    <option value="super_admin" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'super_admin') ? 'selected' : ''; ?>>Super Admin</option>
+                                </select>
+                            </div>
 
-                    <div class="portal-form-row">
+                            <div class="portal-form-group">
+                                <label for="status" class="portal-form-label">
+                                    Status <span class="required-indicator">*</span>
+                                </label>
+                                <select id="status" name="status" class="portal-form-input" required>
+                                    <option value="active" <?php echo ($populateFields && isset($_POST['status']) && $_POST['status'] === 'active') ? 'selected' : 'selected'; ?>>Active</option>
+                                    <option value="inactive" <?php echo ($populateFields && isset($_POST['status']) && $_POST['status'] === 'inactive') ? 'selected' : ''; ?>>Inactive</option>
+                                    <option value="suspended" <?php echo ($populateFields && isset($_POST['status']) && $_POST['status'] === 'suspended') ? 'selected' : ''; ?>>Suspended</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="portal-form-row">
+                            <div class="portal-form-group">
+                                <label for="employee_id" class="portal-form-label">Employee ID</label>
+                                <input type="number" 
+                                       id="employee_id" 
+                                       name="employee_id" 
+                                       class="portal-form-input"
+                                       value="<?php echo ($populateFields && isset($_POST['employee_id'])) ? htmlspecialchars($_POST['employee_id']) : ''; ?>"
+                                       placeholder="Optional">
+                            </div>
+
+                            <div class="portal-form-group">
+                                <label for="department" class="portal-form-label">Department</label>
+                                <input type="text" 
+                                       id="department" 
+                                       name="department" 
+                                       class="portal-form-input"
+                                       maxlength="100"
+                                       value="<?php echo ($populateFields && isset($_POST['department'])) ? htmlspecialchars($_POST['department']) : ''; ?>"
+                                       placeholder="Optional">
+                            </div>
+                        </div>
+
                         <div class="portal-form-group">
-                            <label for="employee_id" class="portal-form-label">Employee ID</label>
-                            <input type="number" 
-                                   id="employee_id" 
-                                   name="employee_id" 
+                            <label for="phone" class="portal-form-label">Phone</label>
+                            <input type="tel" 
+                                   id="phone" 
+                                   name="phone" 
                                    class="portal-form-input"
-                                   value="<?php echo ($populateFields && isset($_POST['employee_id'])) ? htmlspecialchars($_POST['employee_id']) : ''; ?>"
+                                   maxlength="20"
+                                   value="<?php echo ($populateFields && isset($_POST['phone'])) ? htmlspecialchars($_POST['phone']) : ''; ?>"
                                    placeholder="Optional">
                         </div>
 
-                        <div class="portal-form-group">
-                            <label for="department" class="portal-form-label">Department</label>
-                            <input type="text" 
-                                   id="department" 
-                                   name="department" 
-                                   class="portal-form-input"
-                                   maxlength="100"
-                                   value="<?php echo ($populateFields && isset($_POST['department'])) ? htmlspecialchars($_POST['department']) : ''; ?>"
-                                   placeholder="Optional">
+                        <div class="portal-form-actions">
+                            <button type="submit" class="portal-btn portal-btn-primary">
+                                <i class="fas fa-user-plus" aria-hidden="true"></i>
+                                Create User
+                            </button>
+                            <button type="reset" class="portal-btn portal-btn-secondary">
+                                <i class="fas fa-redo" aria-hidden="true"></i>
+                                Reset
+                            </button>
                         </div>
-                    </div>
 
-                    <div class="portal-form-group">
-                        <label for="phone" class="portal-form-label">Phone</label>
-                        <input type="tel" 
-                               id="phone" 
-                               name="phone" 
-                               class="portal-form-input"
-                               maxlength="20"
-                               value="<?php echo ($populateFields && isset($_POST['phone'])) ? htmlspecialchars($_POST['phone']) : ''; ?>"
-                               placeholder="Optional">
-                    </div>
+                        <div class="portal-form-hint portal-form-hint-compact">
+                            <i class="fas fa-info-circle" aria-hidden="true"></i>
+                            <span>A secure password will be auto-generated and sent via email.</span>
+                        </div>
+                    </form>
 
-                    <div class="portal-form-actions">
-                        <button type="submit" class="portal-btn portal-btn-primary">
-                            <i class="fas fa-user-plus" aria-hidden="true"></i>
-                            Create User
-                        </button>
-                        <button type="reset" class="portal-btn portal-btn-secondary">
-                            <i class="fas fa-redo" aria-hidden="true"></i>
-                            Reset
-                        </button>
-                    </div>
-
-                    <div class="portal-form-hint portal-form-hint-compact">
-                        <i class="fas fa-info-circle" aria-hidden="true"></i>
-                        <span>A secure password will be auto-generated and sent via email.</span>
-                    </div>
-                </form>
-            </div>
-        </section>
-
-        <!-- User Stats & Info Panel -->
-        <section class="portal-section portal-dashboard-card sadash-section">
-            <div class="portal-section-header">
-                <h2 class="portal-section-title">User Statistics</h2>
-            </div>
-            <div class="sadash-panel-content">
-                <!-- Quick Stats -->
-                <div class="user-stats-grid">
-                    <div class="user-stat-card">
-                        <div class="user-stat-icon" style="background: #dbeafe;">
-                            <i class="fas fa-users" style="color: #1e40af;"></i>
-                        </div>
-                        <div class="user-stat-content">
-                            <span class="user-stat-value"><?php echo number_format($total_users); ?></span>
-                            <span class="user-stat-label">Total Users</span>
-                        </div>
-                    </div>
-                    <div class="user-stat-card">
-                        <div class="user-stat-icon" style="background: #d1fae5;">
-                            <i class="fas fa-user-check" style="color: #065f46;"></i>
-                        </div>
-                        <div class="user-stat-content">
-                            <span class="user-stat-value"><?php echo number_format($active_users); ?></span>
-                            <span class="user-stat-label">Active</span>
-                        </div>
-                    </div>
-                    <div class="user-stat-card">
-                        <div class="user-stat-icon" style="background: #fef3c7;">
-                            <i class="fas fa-user-clock" style="color: #92400e;"></i>
-                        </div>
-                        <div class="user-stat-content">
-                            <span class="user-stat-value"><?php echo number_format($inactive_users); ?></span>
-                            <span class="user-stat-label">Inactive</span>
-                        </div>
-                    </div>
-                    <div class="user-stat-card">
-                        <div class="user-stat-icon" style="background: #fee2e2;">
-                            <i class="fas fa-user-lock" style="color: #991b1b;"></i>
-                        </div>
-                        <div class="user-stat-content">
-                            <span class="user-stat-value"><?php echo number_format($suspended_users); ?></span>
-                            <span class="user-stat-label">Suspended</span>
-                        </div>
+                    <!-- Quick Guidelines (left column, same card) -->
+                    <div class="user-info-box user-guidelines-box">
+                        <h3 class="user-info-title">
+                            <i class="fas fa-lightbulb" aria-hidden="true"></i>
+                            Quick Guidelines
+                        </h3>
+                        <ul class="user-info-list">
+                            <li>
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                                <span>Username must be unique and 50 characters or less</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                                <span>Email must be valid and will receive the auto-generated password</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                                <span>Password is automatically generated (16 characters with mixed case, numbers, and symbols)</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                                <span>User must change password on first login for security</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                                <span>Role determines access level and dashboard permissions</span>
+                            </li>
+                        </ul>
                     </div>
                 </div>
+            </section>
+        </div>
 
-                <!-- User Creation Guidelines -->
-                <div class="user-info-box">
-                    <h3 class="user-info-title">
-                        <i class="fas fa-lightbulb" aria-hidden="true"></i>
-                        Quick Guidelines
-                    </h3>
-                    <ul class="user-info-list">
-                        <li>
-                            <i class="fas fa-check-circle" aria-hidden="true"></i>
-                            <span>Username must be unique and 50 characters or less</span>
-                        </li>
-                        <li>
-                            <i class="fas fa-check-circle" aria-hidden="true"></i>
-                            <span>Email must be valid and will receive the auto-generated password</span>
-                        </li>
-                        <li>
-                            <i class="fas fa-check-circle" aria-hidden="true"></i>
-                            <span>Password is automatically generated (16 characters with mixed case, numbers, and symbols)</span>
-                        </li>
-                        <li>
-                            <i class="fas fa-check-circle" aria-hidden="true"></i>
-                            <span>User must change password on first login for security</span>
-                        </li>
-                        <li>
-                            <i class="fas fa-check-circle" aria-hidden="true"></i>
-                            <span>Role determines access level and dashboard permissions</span>
-                        </li>
-                    </ul>
+        <!-- Right: User Statistics (with aesthetic divider) -->
+        <div class="users-create-col users-create-col-stats">
+            <section class="portal-section portal-dashboard-card sadash-section">
+                <div class="portal-section-header">
+                    <h2 class="portal-section-title">User Statistics</h2>
                 </div>
-
-                <!-- Role Information -->
-                <div class="user-info-box">
-                    <h3 class="user-info-title">
-                        <i class="fas fa-info-circle" aria-hidden="true"></i>
-                        Available Roles
-                    </h3>
-                    <div class="role-tags">
-                        <span class="role-tag">Super Admin</span>
-                        <span class="role-tag">Admin</span>
-                        <span class="role-tag">Human Resource</span>
-                        <span class="role-tag">Accounting</span>
-                        <span class="role-tag">Operation</span>
-                        <span class="role-tag">Logistics</span>
-                        <span class="role-tag">Employee</span>
-                        <span class="role-tag">Developer</span>
-                    </div>
-                </div>
-
-                <!-- Recent Users (Compact) -->
-                <?php if (!empty($recent_users)): ?>
-                <div class="user-info-box">
-                    <h3 class="user-info-title">
-                        <i class="fas fa-clock" aria-hidden="true"></i>
-                        Recently Created
-                    </h3>
-                    <div class="recent-users-list">
-                        <?php foreach ($recent_users as $user): ?>
-                        <div class="recent-user-item">
-                            <div class="recent-user-avatar">
-                                <?php echo mb_strtoupper(mb_substr($user['name'], 0, 1)); ?>
+                <div class="sadash-panel-content">
+                    <div class="user-stats-grid">
+                        <div class="user-stat-card">
+                            <div class="user-stat-icon" style="background: #dbeafe;">
+                                <i class="fas fa-users" style="color: #1e40af;"></i>
                             </div>
-                            <div class="recent-user-info">
-                                <span class="recent-user-name"><?php echo htmlspecialchars($user['name']); ?></span>
-                                <span class="recent-user-meta"><?php echo htmlspecialchars($user['username']); ?> · <?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $user['role']))); ?></span>
+                            <div class="user-stat-content">
+                                <span class="user-stat-value"><?php echo number_format($total_users); ?></span>
+                                <span class="user-stat-label">Total Users</span>
                             </div>
-                            <span class="recent-user-status <?php echo $user['status'] === 'active' ? 'status-active' : ($user['status'] === 'suspended' ? 'status-suspended' : 'status-inactive'); ?>"></span>
                         </div>
-                        <?php endforeach; ?>
+                        <div class="user-stat-card">
+                            <div class="user-stat-icon" style="background: #d1fae5;">
+                                <i class="fas fa-user-check" style="color: #065f46;"></i>
+                            </div>
+                            <div class="user-stat-content">
+                                <span class="user-stat-value"><?php echo number_format($active_users); ?></span>
+                                <span class="user-stat-label">Active</span>
+                            </div>
+                        </div>
+                        <div class="user-stat-card">
+                            <div class="user-stat-icon" style="background: #fef3c7;">
+                                <i class="fas fa-user-clock" style="color: #92400e;"></i>
+                            </div>
+                            <div class="user-stat-content">
+                                <span class="user-stat-value"><?php echo number_format($inactive_users); ?></span>
+                                <span class="user-stat-label">Inactive</span>
+                            </div>
+                        </div>
+                        <div class="user-stat-card">
+                            <div class="user-stat-icon" style="background: #fee2e2;">
+                                <i class="fas fa-user-lock" style="color: #991b1b;"></i>
+                            </div>
+                            <div class="user-stat-content">
+                                <span class="user-stat-value"><?php echo number_format($suspended_users); ?></span>
+                                <span class="user-stat-label">Suspended</span>
+                            </div>
+                        </div>
                     </div>
+
+                    <div class="user-info-box">
+                        <h3 class="user-info-title">
+                            <i class="fas fa-info-circle" aria-hidden="true"></i>
+                            Available Roles
+                        </h3>
+                        <div class="role-tags">
+                            <span class="role-tag">Super Admin</span>
+                            <span class="role-tag">Admin</span>
+                            <span class="role-tag">Human Resource</span>
+                            <span class="role-tag">Accounting</span>
+                            <span class="role-tag">Operation</span>
+                            <span class="role-tag">Logistics</span>
+                            <span class="role-tag">Employee</span>
+                            <span class="role-tag">Developer</span>
+                        </div>
+                    </div>
+
+                    <?php if (!empty($recent_users)): ?>
+                    <div class="user-info-box">
+                        <h3 class="user-info-title">
+                            <i class="fas fa-clock" aria-hidden="true"></i>
+                            Recently Created
+                        </h3>
+                        <div class="recent-users-list">
+                            <?php foreach ($recent_users as $user): ?>
+                            <div class="recent-user-item">
+                                <div class="recent-user-avatar">
+                                    <?php echo mb_strtoupper(mb_substr($user['name'], 0, 1)); ?>
+                                </div>
+                                <div class="recent-user-info">
+                                    <span class="recent-user-name"><?php echo htmlspecialchars($user['name']); ?></span>
+                                    <span class="recent-user-meta"><?php echo htmlspecialchars($user['username']); ?> · <?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $user['role']))); ?></span>
+                                </div>
+                                <span class="recent-user-status <?php echo $user['status'] === 'active' ? 'status-active' : ($user['status'] === 'suspended' ? 'status-suspended' : 'status-inactive'); ?>"></span>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                 </div>
-                <?php endif; ?>
-            </div>
-        </section>
+            </section>
+        </div>
     </div>
 </div>
 
 <style>
+/* --- Create User two-column layout with aesthetic divider --- */
+.users-create-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+@media (min-width: 900px) {
+    .users-create-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+    }
+
+    .users-create-col-form {
+        padding-right: 24px;
+    }
+
+    /* Aesthetic vertical divider between columns */
+    .users-create-col-stats {
+        position: relative;
+        padding-left: 28px;
+    }
+
+    .users-create-col-stats::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(
+            180deg,
+            transparent 0%,
+            var(--hr-gray-200, #e4e4e7) 3%,
+            rgba(212, 175, 55, 0.4) 15%,
+            rgba(212, 175, 55, 0.7) 50%,
+            rgba(212, 175, 55, 0.4) 85%,
+            var(--hr-gray-200, #e4e4e7) 97%,
+            transparent 100%
+        );
+        border-radius: 1px;
+        pointer-events: none;
+    }
+}
+
+/* Quick Guidelines: subtle separation from form within same card */
+.user-guidelines-box {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--hr-gray-200, #e4e4e7);
+}
+
 .portal-alert {
     padding: 15px 20px;
     margin-bottom: 20px;
