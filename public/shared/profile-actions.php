@@ -166,8 +166,11 @@ function profile_2fa_disable(int $user_id, string $password): array
         return ['success' => false, 'error' => 'Password is required to disable two-factor authentication.'];
     }
 
-    $user = db_fetch_one('SELECT password_hash FROM users WHERE id = ?', [$user_id]);
-    if (!$user || !password_verify($password, $user['password_hash'])) {
+    $user = db_fetch_one('SELECT id, password_hash, two_factor_enabled FROM users WHERE id = ?', [$user_id]);
+    if (!$user) {
+        return ['success' => false, 'error' => 'User not found. Please sign in again.'];
+    }
+    if (!password_verify($password, $user['password_hash'])) {
         return ['success' => false, 'error' => 'Password is incorrect.'];
     }
 
@@ -175,6 +178,12 @@ function profile_2fa_disable(int $user_id, string $password): array
         'UPDATE users SET two_factor_enabled = 0, two_factor_secret = NULL, two_factor_recovery_codes = NULL, updated_at = NOW() WHERE id = ?',
         [$user_id]
     );
+
+    // Verify the update was applied (ensures we are wired to the correct database/table)
+    $after = db_fetch_one('SELECT two_factor_enabled FROM users WHERE id = ?', [$user_id]);
+    if ($after !== null && (int) ($after['two_factor_enabled'] ?? 1) !== 0) {
+        return ['success' => false, 'error' => 'Could not update two-factor settings. Please try again.'];
+    }
 
     return ['success' => true];
 }

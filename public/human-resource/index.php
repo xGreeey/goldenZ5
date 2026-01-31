@@ -58,7 +58,9 @@ $base_url = '/human-resource';
 $assets_url = $base_url . '/assets';
 
 // Profile POST: update personal/account/security/2FA then redirect
-if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && $page === 'profile') {
+$is_profile_post = (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST')
+    && ($page === 'profile' || isset($_POST['profile_section']) || !empty($_POST['_2fa_disable']));
+if ($is_profile_post) {
     $profile_user_id = (int) (AuthMiddleware::user()['id'] ?? 0);
     $profile_base_url = $base_url;
     require $hrAdminRoot . '/../shared/profile-handle-post.php';

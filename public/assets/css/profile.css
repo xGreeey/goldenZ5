@@ -280,6 +280,114 @@
     font-size: 1.2rem;
 }
 
+/* 2FA Disable confirmation modal (replaces browser confirm) */
+.profile-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    box-sizing: border-box;
+}
+
+.profile-modal-overlay.profile-modal-hidden {
+    display: none;
+}
+
+.profile-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    cursor: pointer;
+}
+
+.profile-modal-dialog {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    background: var(--hr-bg-card);
+    border: 1px solid var(--hr-border);
+    border-radius: var(--hr-radius);
+    box-shadow: var(--hr-shadow), 0 24px 48px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+}
+
+.profile-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--hr-border);
+}
+
+.profile-modal-title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--hr-text);
+    line-height: 1.35;
+}
+
+.profile-modal-close {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: var(--hr-radius);
+    background: transparent;
+    color: var(--hr-text-muted);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.profile-modal-close:hover {
+    background: var(--hr-bg-sidebar-hover, var(--hr-gray-100));
+    color: var(--hr-text);
+}
+
+.profile-modal-body {
+    padding: 1.25rem 1.5rem;
+}
+
+.profile-modal-message {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--hr-text-muted);
+    line-height: 1.5;
+}
+
+.profile-modal-password-group {
+    margin-top: 1rem;
+}
+
+.profile-modal-password-group .portal-input {
+    width: 100%;
+    max-width: 280px;
+}
+
+.profile-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--hr-border);
+    background: var(--hr-bg-main, var(--hr-gray-50));
+}
+
+.profile-modal-footer .portal-btn-ghost:hover {
+    background: var(--hr-bg-sidebar-hover, var(--hr-gray-100));
+    color: var(--hr-text);
+}
+
 @media (min-width: 768px) {
     .profile-dl {
         grid-template-columns: 160px 1fr;

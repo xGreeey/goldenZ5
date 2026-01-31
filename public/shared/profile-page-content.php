@@ -18,6 +18,7 @@ $created_at_formatted = $created_at ? date('M j, Y', strtotime($created_at)) : '
 $last_login_formatted = $last_login ? date('M j, Y g:i A', strtotime($last_login)) : '—';
 
 $profile_action = htmlspecialchars($base_url ?? '') . '?page=profile';
+$profile_post_url = ($base_url ?? '') . '/profile-post';
 $csrf = function_exists('csrf_field') ? csrf_field() : '';
 ?>
 <div class="portal-page portal-page-profile profile-page" data-profile-page>
@@ -114,7 +115,7 @@ $csrf = function_exists('csrf_field') ? csrf_field() : '';
                     <dd><?php echo htmlspecialchars($phone ?: '—'); ?></dd>
                 </dl>
                 <div class="profile-edit-hidden" data-profile-edit="personal">
-                    <form method="post" action="<?php echo $profile_action; ?>" class="profile-edit-form">
+                    <form method="post" action="<?php echo $profile_post_url; ?>" class="profile-edit-form">
                         <?php echo $csrf; ?>
                         <input type="hidden" name="profile_section" value="personal">
                         <div class="portal-form-group">
@@ -156,7 +157,7 @@ $csrf = function_exists('csrf_field') ? csrf_field() : '';
                     <dd><?php echo htmlspecialchars($last_login_formatted); ?></dd>
                 </dl>
                 <div class="profile-edit-hidden" data-profile-edit="account">
-                    <form method="post" action="<?php echo $profile_action; ?>" class="profile-edit-form">
+                    <form method="post" action="<?php echo $profile_post_url; ?>" class="profile-edit-form">
                         <?php echo $csrf; ?>
                         <input type="hidden" name="profile_section" value="account">
                         <div class="portal-form-group">
@@ -187,7 +188,7 @@ $csrf = function_exists('csrf_field') ? csrf_field() : '';
                     <span><?php echo $two_factor_enabled ? 'Two-factor Authentication Enabled' : 'Two-factor Authentication Disabled'; ?></span>
                 </p>
                 <div class="profile-edit-hidden" data-profile-edit="security">
-                    <form method="post" action="<?php echo $profile_action; ?>" class="profile-edit-form">
+                    <form method="post" action="<?php echo $profile_post_url; ?>" class="profile-edit-form">
                         <?php echo $csrf; ?>
                         <input type="hidden" name="profile_section" value="security">
                         <div class="portal-form-group">
@@ -221,18 +222,10 @@ $csrf = function_exists('csrf_field') ? csrf_field() : '';
             <div class="profile-card-body">
                 <?php if ($two_factor_enabled): ?>
                 <p class="profile-2fa-status portal-text-muted">Two-factor authentication is enabled. You will be asked for a code when signing in.</p>
-                <form method="post" action="<?php echo $profile_action; ?>" class="profile-2fa-disable-form" onsubmit="return confirm('Disable two-factor authentication? You will only need your password to sign in.');">
-                    <?php echo $csrf; ?>
-                    <input type="hidden" name="profile_section" value="2fa_disable">
-                    <div class="portal-form-group" style="max-width: 280px;">
-                        <label for="profile-2fa-disable-password">Enter your password to disable</label>
-                        <input type="password" id="profile-2fa-disable-password" class="portal-input" name="password" autocomplete="current-password" required>
-                    </div>
-                    <button type="submit" class="portal-btn portal-btn-secondary">Disable two-factor authentication</button>
-                </form>
+                <button type="button" class="portal-btn portal-btn-secondary" id="profile-2fa-disable-btn">Disable two-factor authentication</button>
                 <?php else: ?>
                 <p class="profile-2fa-status portal-text-muted">Add an extra layer of security by enabling two-factor authentication. You will need an authenticator app (e.g. Google Authenticator).</p>
-                <form method="post" action="<?php echo $profile_action; ?>">
+                <form method="post" action="<?php echo $profile_post_url; ?>">
                     <?php echo $csrf; ?>
                     <input type="hidden" name="profile_section" value="2fa_enable">
                     <button type="submit" class="portal-btn portal-btn-primary"><i class="fas fa-lock" aria-hidden="true"></i> Enable two-factor authentication</button>
@@ -272,5 +265,35 @@ $csrf = function_exists('csrf_field') ? csrf_field() : '';
     <div class="profile-toast profile-toast-hidden" id="profileToast" role="status" aria-live="polite" aria-atomic="true">
         <i class="fas fa-check-circle profile-toast-icon" aria-hidden="true"></i>
         <span class="profile-toast-message" id="profileToastMessage">Saved</span>
+    </div>
+
+    <!-- 2FA Disable: modal with password form (password entered in popup only) -->
+    <div class="profile-modal-overlay profile-modal-hidden" id="profile2faDisableModal" role="dialog" aria-modal="true" aria-labelledby="profile2faDisableModalTitle" aria-describedby="profile2faDisableModalDesc">
+        <div class="profile-modal-backdrop" id="profile2faDisableModalBackdrop"></div>
+        <div class="profile-modal-dialog">
+            <form method="post" action="<?php echo htmlspecialchars($profile_post_url); ?>" id="profile-2fa-disable-form" class="profile-2fa-disable-form" data-profile-action="<?php echo htmlspecialchars($profile_post_url); ?>">
+                <?php echo $csrf; ?>
+                <input type="hidden" name="profile_section" value="2fa_disable">
+                <input type="hidden" name="_2fa_disable" value="1">
+                <div class="profile-modal-header">
+                    <h3 id="profile2faDisableModalTitle" class="profile-modal-title">Disable two-factor authentication?</h3>
+                    <button type="button" class="profile-modal-close" id="profile2faDisableModalClose" aria-label="Close">
+                        <i class="fas fa-times" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <div class="profile-modal-body">
+                    <p id="profile2faDisableModalDesc" class="profile-modal-message">Enter your password to confirm. You will only need your password to sign in after this.</p>
+                    <div class="portal-form-group profile-modal-password-group">
+                        <label for="profile-2fa-disable-password">Password</label>
+                        <input type="password" id="profile-2fa-disable-password" class="portal-input" name="password" autocomplete="current-password" required placeholder="Enter your password">
+                        <span class="profile-2fa-password-error" id="profile2faDisablePasswordError" role="alert" style="display:none; font-size: 0.875rem; color: var(--hr-danger); margin-top: 0.25rem;"></span>
+                    </div>
+                </div>
+                <div class="profile-modal-footer">
+                    <button type="button" class="portal-btn portal-btn-ghost" id="profile2faDisableModalCancel">Cancel</button>
+                    <button type="submit" class="portal-btn portal-btn-secondary" id="profile2faDisableModalConfirm">Disable two-factor authentication</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>

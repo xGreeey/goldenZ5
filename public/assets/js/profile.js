@@ -77,6 +77,60 @@
         });
     });
 
+    // 2FA Disable: button opens modal; password entered in modal; Confirm submits form
+    var disableBtn = document.getElementById('profile-2fa-disable-btn');
+    var disableForm = document.getElementById('profile-2fa-disable-form');
+    var disableModal = document.getElementById('profile2faDisableModal');
+    var disablePasswordInput = document.getElementById('profile-2fa-disable-password');
+    var disablePasswordError = document.getElementById('profile2faDisablePasswordError');
+    var disableModalCancel = document.getElementById('profile2faDisableModalCancel');
+    var disableModalClose = document.getElementById('profile2faDisableModalClose');
+    var disableModalBackdrop = document.getElementById('profile2faDisableModalBackdrop');
+
+    function open2faDisableModal() {
+        if (disablePasswordInput) {
+            disablePasswordInput.value = '';
+            disablePasswordInput.focus();
+        }
+        if (disablePasswordError) {
+            disablePasswordError.textContent = '';
+            disablePasswordError.style.display = 'none';
+        }
+        if (disableModal) disableModal.classList.remove('profile-modal-hidden');
+    }
+    function close2faDisableModal() {
+        if (disableModal) disableModal.classList.add('profile-modal-hidden');
+    }
+
+    if (disableBtn && disableModal) {
+        disableBtn.addEventListener('click', open2faDisableModal);
+    }
+    if (disableForm && disableModal) {
+        disableForm.addEventListener('submit', function (e) {
+            var password = disablePasswordInput ? disablePasswordInput.value.trim() : '';
+            if (disablePasswordError) {
+                disablePasswordError.textContent = '';
+                disablePasswordError.style.display = 'none';
+            }
+            if (!password) {
+                e.preventDefault();
+                if (disablePasswordError) {
+                    disablePasswordError.textContent = 'Enter your password to disable two-factor authentication.';
+                    disablePasswordError.style.display = 'block';
+                }
+                if (disablePasswordInput) disablePasswordInput.focus();
+            }
+        });
+        if (disableModalCancel) disableModalCancel.addEventListener('click', close2faDisableModal);
+        if (disableModalClose) disableModalClose.addEventListener('click', close2faDisableModal);
+        if (disableModalBackdrop) disableModalBackdrop.addEventListener('click', close2faDisableModal);
+        document.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Escape' && disableModal && !disableModal.classList.contains('profile-modal-hidden')) {
+                close2faDisableModal();
+            }
+        });
+    }
+
     page.querySelectorAll('.profile-copy-secret').forEach(function (btn) {
         btn.addEventListener('click', function () {
             var id = this.getAttribute('data-copy-target');

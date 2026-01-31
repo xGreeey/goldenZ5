@@ -5,7 +5,13 @@ declare(strict_types=1);
 /**
  * My Profile — handle POST (personal, account, security, 2fa_enable, 2fa_disable).
  * Expects: $profile_user_id (int), $profile_base_url (string). Requires profile-actions.php.
+ * Ensures database is loaded so profile-actions can use db_fetch_one/db_execute.
  */
+
+$appRoot = dirname(__DIR__, 2);
+if (!function_exists('db_fetch_one')) {
+    require_once $appRoot . '/config/database.php';
+}
 
 $profile_send_redirect = function (string $url): void {
     while (ob_get_level()) {
@@ -29,6 +35,11 @@ if ($user_id < 1) {
 require_once __DIR__ . '/profile-actions.php';
 
 $profile_section = isset($_POST['profile_section']) ? trim((string) $_POST['profile_section']) : '';
+
+// Detect 2FA disable form: by profile_section or by _2fa_disable + password (so it works even if profile_section is missing)
+if ((!empty($_POST['_2fa_disable']) && isset($_POST['password'])) || $profile_section === '2fa_disable') {
+    $profile_section = '2fa_disable';
+}
 
 if ($profile_section === 'personal') {
     $result = profile_update_personal($user_id, $_POST);

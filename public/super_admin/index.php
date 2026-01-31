@@ -72,8 +72,10 @@ $_SESSION['permissions'] = $user_permissions;
 $base_url = '/super_admin';
 $assets_url = $base_url . '/assets';
 
-// Profile POST: update personal/account/security/2FA then redirect
-if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && $page === 'profile') {
+// Profile POST: update personal/account/security/2FA then redirect (run when page=profile or when disable form is submitted)
+$is_profile_post = (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST')
+    && ($page === 'profile' || isset($_POST['profile_section']) || !empty($_POST['_2fa_disable']));
+if ($is_profile_post) {
     $profile_user_id = (int) (AuthMiddleware::user()['id'] ?? 0);
     $profile_base_url = $base_url;
     require $saRoot . '/../shared/profile-handle-post.php';
