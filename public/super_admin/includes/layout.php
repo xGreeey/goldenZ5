@@ -60,6 +60,9 @@ $current_user_json = $current_user_json ?? '{}';
     <?php if ($is_super_admin_dashboard): ?>
     <link href="<?php echo htmlspecialchars($assets_url); ?>/css/super_admin_dashboard.css" rel="stylesheet">
     <?php endif; ?>
+    <?php if (isset($page) && $page === 'profile'): ?>
+    <link href="/assets/css/profile.css" rel="stylesheet">
+    <?php endif; ?>
 </head>
 <body class="portal-body">
     <div class="portal-app">
@@ -217,7 +220,7 @@ $current_user_json = $current_user_json ?? '{}';
                     </a>
                 </div>
                 <div class="portal-sidebar-popup-divider"></div>
-                <a href="<?php echo htmlspecialchars($base_url); ?>?page=settings" class="portal-sidebar-popup-item">
+                <a href="<?php echo htmlspecialchars($base_url); ?>?page=profile" class="portal-sidebar-popup-item">
                     <i class="fas fa-user" aria-hidden="true"></i>
                     <span>My profile</span>
                 </a>
@@ -260,7 +263,7 @@ $current_user_json = $current_user_json ?? '{}';
                         <i class="fas fa-times" aria-hidden="true"></i>
                     </button>
                 </div>
-                <a href="<?php echo htmlspecialchars($base_url); ?>?page=settings" class="portal-sidebar-popup-item">
+                <a href="<?php echo htmlspecialchars($base_url); ?>?page=profile" class="portal-sidebar-popup-item">
                     <i class="fas fa-user-circle" aria-hidden="true"></i>
                     <span>Profile</span>
                 </a>
@@ -336,5 +339,8 @@ $current_user_json = $current_user_json ?? '{}';
     <?php endif; ?>
     <!-- SCRIPTS: sidebar collapse, theme toggle, mobile menu, submenu expand -->
     <script src="<?php echo htmlspecialchars($assets_url); ?>/js/portal.js"></script>
+    <?php if (isset($page) && $page === 'profile'): ?>
+    <script src="/assets/js/profile.js"></script>
+    <?php endif; ?>
 </body>
 </html>

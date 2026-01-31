@@ -1,0 +1,330 @@
+/**
+ * =============================================================================
+ * MY PROFILE — Shared profile page styles (all roles)
+ * =============================================================================
+ * Uses portal variables (--hr-*). Card-based sections, edit/view states,
+ * subtle elevation, responsive grid. Load when page=profile.
+ * =============================================================================
+ */
+
+/* --- Page container --- */
+.portal-page-profile {
+    padding: 0 0 32px;
+    max-width: 960px;
+}
+
+.profile-page-header {
+    margin-bottom: 24px;
+}
+
+/* --- Profile header: avatar, name, role badge, identifiers --- */
+.profile-header {
+    margin-bottom: 32px;
+    padding: 24px;
+    background: var(--hr-bg-card);
+    border: 1px solid var(--hr-border);
+    border-radius: var(--hr-radius);
+    box-shadow: var(--hr-shadow);
+}
+
+.profile-header-inner {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.profile-header-avatar {
+    flex-shrink: 0;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--hr-primary-light);
+    color: var(--hr-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-header-avatar:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.profile-header-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.profile-header-name {
+    margin: 0 0 8px;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--hr-text);
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+}
+
+.profile-header-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.profile-header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.profile-header-identifier {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--hr-text-muted);
+}
+
+.profile-header-identifier i {
+    opacity: 0.85;
+}
+
+/* --- Section cards grid --- */
+.profile-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+.profile-section-card {
+    padding: 20px 24px;
+    border: 1px solid var(--hr-border);
+    border-radius: var(--hr-radius);
+    box-shadow: var(--hr-shadow);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-section-card:focus-within {
+    border-color: var(--hr-primary);
+    box-shadow: 0 0 0 1px var(--hr-primary);
+}
+
+.profile-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--hr-border);
+}
+
+.profile-card-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--hr-text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.profile-card-title i {
+    color: var(--hr-primary);
+    font-size: 18px;
+    opacity: 0.9;
+}
+
+.profile-card-body {
+    position: relative;
+    min-height: 44px;
+}
+
+/* --- View mode: definition list --- */
+.profile-view {
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.profile-dl {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 10px 24px;
+    margin: 0;
+    font-size: 14px;
+}
+
+.profile-dl dt {
+    font-weight: 500;
+    color: var(--hr-text-muted);
+}
+
+.profile-dl dd {
+    margin: 0;
+    color: var(--hr-text);
+}
+
+.profile-value-placeholder,
+.profile-value-muted {
+    color: var(--hr-text-muted);
+}
+
+/* --- Edit mode: form --- */
+.profile-edit {
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.profile-edit-hidden {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-4px);
+}
+
+.profile-section-card.profile-section-edit .profile-view {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(4px);
+}
+
+.profile-section-card.profile-section-edit .profile-edit {
+    position: relative;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.profile-section-card.profile-section-edit .profile-edit-trigger {
+    display: none;
+}
+
+.profile-section-card.profile-section-edit .profile-view {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+}
+
+.profile-form .portal-form-group {
+    margin-bottom: 16px;
+}
+
+.profile-form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--hr-border);
+}
+
+.profile-field-hint {
+    font-size: 13px;
+    margin: 0 0 12px;
+}
+
+/* --- Read-only section (Role & Access) --- */
+.profile-section-readonly .profile-card-header {
+    border-bottom: 1px solid var(--hr-border);
+}
+
+.profile-permissions-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.profile-permissions-list li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 14px;
+    color: var(--hr-text);
+}
+
+.profile-permission-icon {
+    color: var(--hr-success);
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+/* --- Toast feedback --- */
+.profile-toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    background: var(--hr-gray-900);
+    color: var(--hr-gray-50);
+    border-radius: var(--hr-radius);
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+    z-index: 1000;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+[data-theme="dark"] .profile-toast {
+    background: var(--hr-gray-100);
+    color: var(--hr-gray-900);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.profile-toast-hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-50%) translateY(80px);
+}
+
+.profile-toast-visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.profile-toast-icon {
+    color: var(--hr-green-400);
+    font-size: 18px;
+}
+
+/* --- Responsive: tablet and up --- */
+@media (min-width: 768px) {
+    .profile-header {
+        padding: 28px 32px;
+    }
+
+    .profile-header-name {
+        font-size: 24px;
+    }
+
+    .profile-grid {
+        gap: 24px;
+    }
+
+    .profile-section-card {
+        padding: 24px 28px;
+    }
+
+    .profile-dl {
+        grid-template-columns: 160px 1fr;
+    }
+}
+
+@media (min-width: 1024px) {
+    .profile-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .profile-section-card.profile-section-readonly {
+        grid-column: 1 / -1;
+    }
+}

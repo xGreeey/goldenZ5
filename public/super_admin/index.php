@@ -39,7 +39,7 @@ require_once $appRoot . '/includes/permissions.php';
 $page = isset($_GET['page']) ? trim($_GET['page']) : 'dashboard';
 $page = preg_replace('/[^a-z0-9_-]/i', '', $page) ?: 'dashboard';
 
-$allowed_pages = ['dashboard', 'users', 'roles'];
+$allowed_pages = ['dashboard', 'users', 'roles', 'profile'];
 if (!in_array($page, $allowed_pages, true)) {
     $page = 'dashboard';
 }
