@@ -30,6 +30,7 @@ switch ($dashboard_scope) {
         break;
     case 'human-resource':
     case 'humanresource':
+    case 'hr':
         $greeting = 'Human Resource · Hiring';
         break;
     case 'super_admin':

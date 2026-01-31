@@ -18,18 +18,6 @@
     var currentUser = config.currentUser || { role: 'super_admin', permissions: [] };
     var permissions = Array.isArray(config.permissions) ? config.permissions : [];
 
-    // Super Admin sees everything if role is super_admin (optional override)
-    var isSuperAdmin = (currentUser.role || '').toLowerCase() === 'super_admin';
-    if (isSuperAdmin && permissions.length === 0) {
-        // Mock full set when role is super_admin and no permissions array (fallback)
-        permissions = [
-            'permissions.manage.system', 'users.manage', 'roles.manage',
-            'audit.view', 'system.settings.manage', 'dashboard.view.super_admin',
-            'modules.enable_disable', 'interview.conduct', 'interview.schedule',
-            'reports.view.all'
-        ];
-    }
-
     /**
      * Check if user has a single permission.
      * @param {string} perm - Permission string (e.g. 'users.manage')
@@ -134,8 +122,8 @@
             }
         });
 
-        // Sidebar nav: items with data-sadash-permission
-        var navLinks = document.querySelectorAll('[data-sadash-permission]');
+        // Sidebar nav: items with data-sadash-permission or data-sadash-permission-any
+        var navLinks = document.querySelectorAll('[data-sadash-permission], [data-sadash-permission-any]');
         navLinks.forEach(function (link) {
             var perm = link.getAttribute('data-sadash-permission');
             var any = link.getAttribute('data-sadash-permission-any');

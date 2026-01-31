@@ -10,6 +10,33 @@ $page_title = 'Super Admin Dashboard';
 $display_name = isset($current_user['name']) && $current_user['name'] !== '' ? $current_user['name'] : ($current_user['username'] ?? 'Super Admin');
 $user_initial = mb_strtoupper(mb_substr($display_name, 0, 1));
 
+// Empty dashboard state: user has no assigned permissions (intentional, not an error)
+if (empty($user_permissions)) {
+?>
+<div class="portal-page portal-page-dashboard sadash-page sadash-empty-dashboard" id="sadashEmptyDashboard">
+    <div class="sadash-empty-state">
+        <div class="sadash-empty-icon" aria-hidden="true">
+            <i class="fas fa-inbox"></i>
+        </div>
+        <h2 class="sadash-empty-title">No modules assigned</h2>
+        <p class="sadash-empty-desc">Your account does not have any dashboard modules or tabs assigned yet. This is intentional—you’re logged in successfully, but an administrator needs to assign permissions to your role before you’ll see dashboard content.</p>
+        <p class="sadash-empty-hint">Contact your administrator or system owner to request access to the modules you need.</p>
+        <div class="sadash-empty-actions">
+            <a href="<?php echo htmlspecialchars($base_url ?? '/super_admin'); ?>?page=settings" class="portal-btn portal-btn-secondary">
+                <i class="fas fa-cog" aria-hidden="true"></i>
+                Account settings
+            </a>
+            <a href="/?logout=1" class="portal-btn portal-btn-secondary">
+                <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                Sign out
+            </a>
+        </div>
+    </div>
+</div>
+<?php
+    return;
+}
+
 // Mock KPI data — replace with backend
 $kpis = [
     'total_users' => 1247,

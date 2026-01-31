@@ -1,7 +1,7 @@
 <?php
 /**
  * Human Resource — secure document download. Resolves path by employee_documents.id (no raw paths).
- * Middleware: Session → Auth → Role (humanresource). Logs each download via log_security_event.
+ * Middleware: Session → Auth → Role (hr). Logs each download via log_security_event.
  * Call: /human-resource/document-download.php?id=<employee_documents.id>
  */
 declare(strict_types=1);
@@ -21,7 +21,7 @@ require_once $appRoot . '/app/services/storage.php';
 
 SessionMiddleware::handle();
 AuthMiddleware::check();
-RoleMiddleware::requireRole(['humanresource']);
+RoleMiddleware::requireRole(['hr']);
 
 $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 if ($id <= 0) {

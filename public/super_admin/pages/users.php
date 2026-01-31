@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
             $errors[] = 'Name must be 100 characters or less.';
         }
 
-        $valid_roles = ['super_admin', 'admin', 'humanresource', 'accounting', 'operation', 'logistics', 'employee', 'developer'];
+        $valid_roles = ['super_admin', 'hr', 'admin', 'accounting', 'operation', 'logistics', 'employee', 'developer'];
         if (!in_array($role, $valid_roles, true)) {
             $errors[] = 'Invalid role selected.';
         }
@@ -332,7 +332,7 @@ $recent_users = db_fetch_all('SELECT id, username, email, name, role, status, cr
                                 <select id="role" name="role" class="portal-form-input" required>
                                     <option value="employee" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'employee') ? 'selected' : 'selected'; ?>>Employee</option>
                                     <option value="admin" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'admin') ? 'selected' : ''; ?>>Admin</option>
-                                    <option value="humanresource" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'humanresource') ? 'selected' : ''; ?>>Human Resource</option>
+                                    <option value="hr" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'hr') ? 'selected' : ''; ?>>HR</option>
                                     <option value="accounting" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'accounting') ? 'selected' : ''; ?>>Accounting</option>
                                     <option value="operation" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'operation') ? 'selected' : ''; ?>>Operation</option>
                                     <option value="logistics" <?php echo ($populateFields && isset($_POST['role']) && $_POST['role'] === 'logistics') ? 'selected' : ''; ?>>Logistics</option>
