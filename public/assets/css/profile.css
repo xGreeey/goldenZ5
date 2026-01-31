@@ -243,7 +243,7 @@
     flex-shrink: 0;
 }
 
-/* Toast */
+/* Toast — success: green; error: red; text and icon always white for contrast */
 .profile-toast {
     position: fixed;
     bottom: 24px;
@@ -252,12 +252,17 @@
     align-items: center;
     gap: 10px;
     padding: 14px 20px;
-    background: var(--hr-text);
+    background: var(--hr-success, #16a34a);
     color: #fff;
     border-radius: var(--hr-radius);
     box-shadow: var(--hr-shadow);
     z-index: 9999;
     transition: opacity 0.3s, transform 0.3s;
+}
+
+.profile-toast .profile-toast-icon,
+.profile-toast .profile-toast-message {
+    color: inherit;
 }
 
 .profile-toast-hidden {
@@ -272,12 +277,23 @@
 }
 
 .profile-toast-error {
-    background: var(--hr-danger);
+    background: var(--hr-danger, #dc2626);
+    color: #fff;
+}
+
+.profile-toast-error .profile-toast-icon,
+.profile-toast-error .profile-toast-message {
+    color: #fff;
 }
 
 .profile-toast-icon {
     flex-shrink: 0;
     font-size: 1.2rem;
+    color: #fff;
+}
+
+.profile-toast-message {
+    color: #fff;
 }
 
 /* 2FA Disable confirmation modal (replaces browser confirm) */
