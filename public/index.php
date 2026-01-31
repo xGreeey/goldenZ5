@@ -1238,13 +1238,19 @@ ob_end_flush();
                         </a>
                     </div>
 
-                    <div class="form-submit">
-                        <button type="submit" name="login" class="btn btn-primary btn-block" id="submitBtn">
-                            <span class="btn-text">Sign In</span>
-                            <span class="btn-spinner d-none" id="submitSpinner">
-                                <i class="fas fa-spinner fa-spin"></i>
-                            </span>
-                        </button>
+                    <div class="form-submit form-submit-actions">
+                        <div class="form-submit-row">
+                            <button type="submit" name="login" class="btn btn-primary btn-block" id="submitBtn">
+                                <span class="btn-text">Sign In</span>
+                                <span class="btn-spinner d-none" id="submitSpinner">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </span>
+                            </button>
+                            <a href="/dashboards-overview.php" class="btn-dashboards-overview" aria-label="View company dashboards overview">
+                                <i class="fas fa-th-large" aria-hidden="true"></i>
+                                <span>View Dashboards Overview</span>
+                            </a>
+                        </div>
                     </div>
 
                     <div class="form-footer">

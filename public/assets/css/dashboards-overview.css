@@ -1,0 +1,544 @@
+/**
+ * Golden Z-5 HR System – Company Dashboards Overview (standalone page)
+ * Full-page layout, tab switcher, role tiles, KPI cards, stats, preview sections
+ * public/assets/css/dashboards-overview.css
+ */
+
+/* ---------------------------------------------------------------------------
+   Design tokens (match login)
+   --------------------------------------------------------------------------- */
+:root {
+  --gold-primary: #d4af37;
+  --gold-dark: #b8962e;
+  --gold-light: #f4e4bc;
+  --charcoal: #0f1419;
+  --bg-card: #ffffff;
+  --text-primary: #111827;
+  --text-muted: #6b7280;
+  --border-color: #e5e7eb;
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ---------------------------------------------------------------------------
+   Page layout
+   --------------------------------------------------------------------------- */
+.dashboards-overview-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--text-primary);
+  background: #f5f6f8;
+  -webkit-font-smoothing: antialiased;
+}
+
+.dashboards-overview-topbar {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+  padding: 1rem 1.5rem;
+  flex-shrink: 0;
+}
+
+.dashboards-overview-topbar-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.dashboards-overview-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--gold-dark);
+  text-decoration: none;
+  margin-bottom: 0.75rem;
+  transition: color 0.2s;
+}
+
+.dashboards-overview-back-link:hover {
+  color: var(--gold-primary);
+}
+
+.dashboards-overview-topbar-title .dashboards-overview-title {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 400;
+  color: var(--text-primary);
+  margin: 0 0 0.25rem;
+}
+
+.dashboards-overview-topbar-title .dashboards-overview-subtitle {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.dashboards-overview-main {
+  flex: 1;
+  padding: 1.5rem;
+}
+
+.dashboards-overview-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  background: var(--bg-card);
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+/* ---------------------------------------------------------------------------
+   Header (inside container, for tab/content area)
+   --------------------------------------------------------------------------- */
+.dashboards-overview-header {
+  padding: 1.5rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.dashboards-overview-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--text-primary);
+  margin: 0 0 0.25rem;
+}
+
+.dashboards-overview-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   View toggle (Tabs vs Grid)
+   --------------------------------------------------------------------------- */
+.dashboards-overview-view-toggle {
+  display: flex;
+  gap: 0.25rem;
+  padding: 1rem 1.5rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.dashboards-overview-view-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted, #6b7280);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s, border-color 0.2s;
+}
+
+.dashboards-overview-view-btn:hover {
+  color: var(--text-primary, #111827);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.dashboards-overview-view-btn.active {
+  color: var(--gold-dark, #b8962e);
+  background: var(--gold-light, #f4e4bc);
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+/* ---------------------------------------------------------------------------
+   Tab switcher (role tabs)
+   --------------------------------------------------------------------------- */
+.dashboards-overview-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 1rem 1.5rem 0;
+  flex-shrink: 0;
+}
+
+.dashboards-overview-tab {
+  padding: 0.5rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted, #6b7280);
+  background: #f8fafc;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s, border-color 0.2s;
+}
+
+.dashboards-overview-tab:hover {
+  color: var(--text-primary, #111827);
+  background: #f1f5f9;
+}
+
+.dashboards-overview-tab.active {
+  color: var(--bg-dark, #0f1419);
+  background: linear-gradient(135deg, var(--gold-primary, #d4af37) 0%, var(--gold-dark, #b8962e) 100%);
+  border-color: transparent;
+}
+
+/* ---------------------------------------------------------------------------
+   Body (scrollable)
+   --------------------------------------------------------------------------- */
+.dashboards-overview-body {
+  padding: 1.25rem 1.5rem 2rem;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Grid overview: role tiles */
+.dashboards-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
+.dashboards-overview-grid.hidden {
+  display: none;
+}
+
+#dashboardsOverviewTabsContainer.hidden,
+.dashboards-overview-preview-wrap.hidden {
+  display: none !important;
+}
+
+.dashboards-overview-role-tile {
+  background: #f8fafc;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.dashboards-overview-role-tile:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border-color: rgba(212, 175, 55, 0.35);
+  transform: translateY(-2px);
+}
+
+.dashboards-overview-role-tile-icon {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--gold-dark, #b8962e);
+  border-radius: 10px;
+  font-size: 1.1rem;
+}
+
+.dashboards-overview-role-tile-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+  margin: 0 0 0.5rem;
+  line-height: 1.2;
+}
+
+.dashboards-overview-role-tile-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+}
+
+.dashboards-overview-kpi-chip {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-muted, #6b7280);
+  background: #fff;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 6px;
+  padding: 0.2rem 0.5rem;
+}
+
+.dashboards-overview-role-tile-preview-btn {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--gold-dark, #b8962e);
+  background: transparent;
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.dashboards-overview-role-tile-preview-btn:hover {
+  background: rgba(212, 175, 55, 0.12);
+  color: var(--bg-dark, #0f1419);
+}
+
+/* Role preview (tab content) */
+.dashboards-overview-preview {
+  display: none;
+}
+
+.dashboards-overview-preview.active {
+  display: block;
+}
+
+.dashboards-overview-preview.hidden {
+  display: none !important;
+}
+
+.dashboards-overview-tone {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+  font-style: italic;
+}
+
+/* Stats row (summary numbers) */
+.dashboards-overview-stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: rgba(212, 175, 55, 0.06);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 12px;
+}
+
+.dashboards-overview-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+}
+
+.dashboards-overview-stat-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.dashboards-overview-stat-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* Mini KPI cards */
+.dashboards-overview-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.dashboards-overview-mini-kpi {
+  background: #f8fafc;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.dashboards-overview-mini-kpi:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border-color: rgba(212, 175, 55, 0.25);
+}
+
+.dashboards-overview-mini-kpi-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin-bottom: 0.25rem;
+}
+
+.dashboards-overview-mini-kpi-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary, #111827);
+}
+
+/* Preview sections (mini lists) */
+.dashboards-overview-section {
+  margin-bottom: 1rem;
+}
+
+.dashboards-overview-section:last-child {
+  margin-bottom: 0;
+}
+
+.dashboards-overview-section-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+  margin: 0 0 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.dashboards-overview-section-title i {
+  color: var(--gold-primary, #d4af37);
+  font-size: 0.85rem;
+}
+
+.dashboards-overview-section-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background: #f8fafc;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.dashboards-overview-section-list li {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-muted, #6b7280);
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.dashboards-overview-section-list li:last-child {
+  border-bottom: none;
+}
+
+/* Sections grid (2 columns on desktop for more content) */
+.dashboards-overview-sections-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.dashboards-overview-sections-grid .dashboards-overview-section {
+  margin-bottom: 0;
+}
+
+/* Chart placeholder */
+.dashboards-overview-chart-placeholder {
+  height: 80px;
+  background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
+  border: 1px dashed var(--border-color);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+}
+
+.dashboards-overview-chart-placeholder.dashboards-overview-chart-large {
+  height: 140px;
+  margin-top: 1rem;
+  font-size: 0.85rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Footer (page footer)
+   --------------------------------------------------------------------------- */
+.dashboards-overview-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-card);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.dashboards-overview-back-btn {
+  padding: 0.6rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--charcoal);
+  background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dark) 100%);
+  border: none;
+  border-radius: 10px;
+  text-decoration: none;
+  display: inline-block;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.dashboards-overview-back-btn:hover {
+  color: var(--charcoal);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.35);
+}
+
+.dashboards-overview-request-link {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  cursor: default;
+  opacity: 0.8;
+}
+
+/* ---------------------------------------------------------------------------
+   Responsive
+   --------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .dashboards-overview-tabs {
+    padding: 0.75rem 1rem 0;
+  }
+
+  .dashboards-overview-tab {
+    padding: 0.4rem 0.65rem;
+    font-size: 0.75rem;
+  }
+
+  .dashboards-overview-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dashboards-overview-sections-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboards-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboards-overview-stats-row {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 600px) {
+  .dashboards-overview-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboards-overview-view-toggle {
+    padding: 0.75rem 1rem 0.5rem;
+  }
+
+  .dashboards-overview-body {
+    padding: 0.75rem 1rem 1.25rem;
+  }
+
+  .dashboards-overview-footer {
+    padding: 0.75rem 1rem;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dashboards-overview-back-btn {
+    width: 100%;
+    text-align: center;
+  }
+}

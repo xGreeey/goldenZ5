@@ -463,6 +463,50 @@ html, body {
   cursor: not-allowed;
 }
 
+/* Form submit row: Sign In + View Dashboards Overview link */
+.form-submit-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.form-submit-actions .form-submit-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.form-submit-actions .btn-primary.btn-block {
+  flex: 1;
+  min-width: 0;
+}
+
+.btn-dashboards-overview {
+  padding: 0.85rem 1.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gold-dark);
+  background: transparent;
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s, color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.btn-dashboards-overview:hover {
+  background: rgba(212, 175, 55, 0.1);
+  border-color: var(--gold-primary);
+  color: var(--bg-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.2);
+}
+
 .form-footer {
   margin-top: 1.5rem;
   padding-top: 1rem;
@@ -1221,6 +1265,15 @@ body.login-transition-active .auth-form-container {
 
   .auth-form-card {
     padding: 1.5rem;
+  }
+
+  .form-submit-actions .form-submit-row {
+    flex-direction: column;
+  }
+
+  .form-submit-actions .btn-primary.btn-block,
+  .btn-dashboards-overview {
+    width: 100%;
   }
 
   .ai-help-panel {
