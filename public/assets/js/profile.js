@@ -1,6 +1,5 @@
 /**
- * My Profile — Edit/view toggles, flash toast from server, copy 2FA secret.
- * Forms submit via POST; server redirects with success/error in URL; we show toast from flash data.
+ * My Profile — toast from server flash, edit/cancel toggles, copy 2FA secret.
  */
 (function () {
     'use strict';
@@ -29,9 +28,7 @@
 
     function enterEdit(sectionId) {
         var card = page.querySelector('[data-profile-section-content="' + sectionId + '"]');
-        if (card) {
-            card = card.closest('.profile-section-card');
-        }
+        if (card) card = card.closest('.profile-section-card');
         if (card) {
             card.classList.add('profile-section-edit');
             var editEl = card.querySelector('[data-profile-edit="' + sectionId + '"]');
@@ -41,9 +38,7 @@
 
     function exitEdit(sectionId) {
         var card = page.querySelector('[data-profile-section-content="' + sectionId + '"]');
-        if (card) {
-            card = card.closest('.profile-section-card');
-        }
+        if (card) card = card.closest('.profile-section-card');
         if (card) {
             card.classList.remove('profile-section-edit');
             var editEl = card.querySelector('[data-profile-edit="' + sectionId + '"]');
@@ -51,7 +46,6 @@
         }
     }
 
-    // Flash from server (success/error in data attributes after redirect)
     var flash = document.getElementById('profile-flash');
     if (flash) {
         var success = flash.getAttribute('data-success');
@@ -69,7 +63,6 @@
         }
     }
 
-    // Edit trigger buttons
     page.querySelectorAll('.profile-edit-trigger').forEach(function (btn) {
         btn.addEventListener('click', function () {
             var section = this.getAttribute('data-profile-section');
@@ -77,7 +70,6 @@
         });
     });
 
-    // Cancel buttons (no form submit; just exit edit mode)
     page.querySelectorAll('.profile-cancel').forEach(function (btn) {
         btn.addEventListener('click', function () {
             var section = this.getAttribute('data-profile-cancel');
@@ -85,16 +77,12 @@
         });
     });
 
-    // Forms submit normally (POST); no preventDefault
-    // Optional: show toast on submit in case of slow redirect (optional enhancement)
-
-    // Copy 2FA secret button
     page.querySelectorAll('.profile-copy-secret').forEach(function (btn) {
         btn.addEventListener('click', function () {
             var id = this.getAttribute('data-copy-target');
             var el = id ? document.getElementById(id) : null;
             if (el) {
-                var text = el.textContent || '';
+                var text = (el.textContent || '').trim();
                 if (navigator.clipboard && navigator.clipboard.writeText) {
                     navigator.clipboard.writeText(text).then(function () {
                         showToast('Secret key copied to clipboard.', false);

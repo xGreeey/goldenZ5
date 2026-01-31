@@ -5,10 +5,8 @@ declare(strict_types=1);
 /**
  * My Profile — handle POST (personal, account, security, 2fa_enable, 2fa_disable).
  * Expects: $profile_user_id (int), $profile_base_url (string). Requires profile-actions.php.
- * Redirects and exits on success/error.
  */
 
-/** Discard any output so redirect works; call before header('Location: ...'). */
 $profile_send_redirect = function (string $url): void {
     while (ob_get_level()) {
         ob_end_clean();
@@ -17,7 +15,7 @@ $profile_send_redirect = function (string $url): void {
         header('Location: ' . $url);
         exit;
     }
-    echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=' . htmlspecialchars($url) . '"></head><body><p>Redirecting… <a href="' . htmlspecialchars($url) . '">Click here</a> if not redirected.</p></body></html>';
+    echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=' . htmlspecialchars($url) . '"></head><body><p>Redirecting… <a href="' . htmlspecialchars($url) . '">Click here</a>.</p></body></html>';
     exit;
 };
 
@@ -63,11 +61,7 @@ if ($profile_section === 'security') {
 }
 
 if ($profile_section === '2fa_enable') {
-    try {
-        $result = profile_2fa_enable($user_id);
-    } catch (Throwable $e) {
-        $profile_send_redirect($redirect_base . '&error=' . urlencode('Could not enable two-factor authentication. Please try again.'));
-    }
+    $result = profile_2fa_enable($user_id);
     if (!empty($result['error'])) {
         $profile_send_redirect($redirect_base . '&error=' . urlencode($result['error']));
     }

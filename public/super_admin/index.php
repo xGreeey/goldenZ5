@@ -99,6 +99,7 @@ if ($page === 'roles') {
 $page_title = match($page) {
     'users' => 'User Management',
     'roles' => 'Roles & Permissions',
+    'profile' => 'My Profile',
     default => 'Super Admin Dashboard',
 };
 $is_super_admin_dashboard = true;

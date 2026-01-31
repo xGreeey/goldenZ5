@@ -4,19 +4,13 @@ declare(strict_types=1);
 
 /**
  * My Profile — backend actions (load user, update personal/account/password, 2FA).
- * Requires: config/database.php (db_fetch_one, db_execute), includes/security.php optional.
- * Call from portal index when POST and page=profile.
+ * Requires: config/database.php (db_fetch_one, db_execute).
  */
 
 if (!function_exists('db_fetch_one') || !function_exists('db_execute')) {
     return;
 }
 
-/**
- * Load profile user row (id, username, email, name, role, department, phone, created_at, last_login, two_factor_enabled).
- *
- * @return array<string, mixed>|null
- */
 function profile_load_user(int $user_id): ?array
 {
     $row = db_fetch_one(
@@ -27,12 +21,6 @@ function profile_load_user(int $user_id): ?array
     return $row;
 }
 
-/**
- * Update personal info (name, email, phone). Returns ['success' => true] or ['error' => string].
- *
- * @param array{name?: string, email?: string, phone?: string} $data
- * @return array{success: bool, error?: string}
- */
 function profile_update_personal(int $user_id, array $data): array
 {
     $name = trim((string) ($data['name'] ?? $data['full_name'] ?? ''));
@@ -60,7 +48,7 @@ function profile_update_personal(int $user_id, array $data): array
 
     $existing = db_fetch_one('SELECT id FROM users WHERE email = ? AND id != ?', [$email, $user_id]);
     if ($existing !== null) {
-        return ['success' => false, 'error' => 'That email is already in use by another account.'];
+        return ['success' => false, 'error' => 'That email is already in use.'];
     }
 
     db_execute(
@@ -72,11 +60,6 @@ function profile_update_personal(int $user_id, array $data): array
     return ['success' => true];
 }
 
-/**
- * Update account (username). Returns ['success' => true] or ['error' => string].
- *
- * @return array{success: bool, error?: string}
- */
 function profile_update_account(int $user_id, string $username): array
 {
     $username = trim($username);
@@ -97,11 +80,6 @@ function profile_update_account(int $user_id, string $username): array
     return ['success' => true];
 }
 
-/**
- * Change password. Verifies current password, then updates. Returns ['success' => true] or ['error' => string].
- *
- * @return array{success: bool, error?: string}
- */
 function profile_update_password(int $user_id, string $current_password, string $new_password): array
 {
     if ($current_password === '') {
@@ -129,16 +107,9 @@ function profile_update_password(int $user_id, string $current_password, string 
 
     $hash = password_hash($new_password, PASSWORD_DEFAULT);
     db_execute('UPDATE users SET password_hash = ?, password_changed_at = NOW(), updated_at = NOW() WHERE id = ?', [$hash, $user_id]);
-
-    if (function_exists('log_security_event')) {
-        log_security_event('Password Changed (Profile)', "User ID: $user_id");
-    }
     return ['success' => true];
 }
 
-/**
- * Base32 encode (RFC 3548) for TOTP secret.
- */
 function profile_base32_encode(string $data): string
 {
     $alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
@@ -160,11 +131,6 @@ function profile_base32_encode(string $data): string
     return $output;
 }
 
-/**
- * Generate random recovery codes (8 codes, 8 chars each, alphanumeric).
- *
- * @return array<int, string>
- */
 function profile_generate_recovery_codes(): array
 {
     $chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -179,11 +145,6 @@ function profile_generate_recovery_codes(): array
     return array_values($codes);
 }
 
-/**
- * Enable two-factor auth: generate secret and recovery codes, save to DB. Returns secret and codes for one-time display.
- *
- * @return array{success: bool, secret?: string, recovery_codes?: array<int, string>, error?: string}
- */
 function profile_2fa_enable(int $user_id): array
 {
     $secretBinary = random_bytes(20);
@@ -196,17 +157,9 @@ function profile_2fa_enable(int $user_id): array
         [$secret, $recovery_json, $user_id]
     );
 
-    if (function_exists('log_security_event')) {
-        log_security_event('2FA Enabled', "User ID: $user_id");
-    }
     return ['success' => true, 'secret' => $secret, 'recovery_codes' => $recovery_codes];
 }
 
-/**
- * Disable two-factor auth. Verifies password first.
- *
- * @return array{success: bool, error?: string}
- */
 function profile_2fa_disable(int $user_id, string $password): array
 {
     if ($password === '') {
@@ -223,8 +176,5 @@ function profile_2fa_disable(int $user_id, string $password): array
         [$user_id]
     );
 
-    if (function_exists('log_security_event')) {
-        log_security_event('2FA Disabled', "User ID: $user_id");
-    }
     return ['success' => true];
 }
