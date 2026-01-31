@@ -1,9 +1,22 @@
 <?php
 /**
- * My Profile — shared UI for Super Admin (and all roles).
- * Content from shared partial; $base_url, $current_user, $user_permissions set by index.
+ * My Profile — shared UI for Super Admin (and all roles). Loads full user from DB.
  */
 $page_title = 'My Profile';
+require_once dirname(__DIR__, 2) . '/shared/profile-actions.php';
+$user_id = (int) (AuthMiddleware::user()['id'] ?? 0);
+$profile_row = profile_load_user($user_id);
+if ($profile_row) {
+    $current_user = array_merge($current_user, $profile_row);
+}
+$profile_success = isset($_GET['success']) ? (string) $_GET['success'] : null;
+$profile_error = isset($_GET['error']) ? (string) $_GET['error'] : null;
+$profile_2fa_setup = isset($_GET['2fa_setup']) && !empty($_SESSION['profile_2fa_secret']);
+$profile_2fa_secret = $_SESSION['profile_2fa_secret'] ?? '';
+$profile_2fa_recovery_codes = $_SESSION['profile_2fa_recovery_codes'] ?? [];
+if ($profile_2fa_setup) {
+    unset($_SESSION['profile_2fa_secret'], $_SESSION['profile_2fa_recovery_codes']);
+}
 $role_permissions = isset($user_permissions) && is_array($user_permissions)
     ? array_slice($user_permissions, 0, 12)
     : ['Dashboard access', 'View reports', 'Manage profile'];

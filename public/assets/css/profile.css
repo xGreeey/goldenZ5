@@ -296,6 +296,109 @@
     font-size: 18px;
 }
 
+.profile-toast-error .profile-toast-icon {
+    color: var(--hr-red-400);
+}
+
+/* Flash data (hidden; used by JS for success/error toast) */
+.profile-flash-data {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* 2FA setup one-time block: QR beside secret + recovery codes */
+.profile-2fa-setup-content {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 24px;
+    margin-top: 16px;
+}
+
+.profile-2fa-qr-box {
+    flex-shrink: 0;
+}
+
+.profile-2fa-qr-box .profile-2fa-secret-label {
+    display: block;
+    margin-bottom: 8px;
+}
+
+.profile-2fa-qr-img {
+    display: block;
+    width: 200px;
+    height: 200px;
+    border: 1px solid var(--hr-border);
+    border-radius: var(--hr-radius);
+    background: #fff;
+}
+
+[data-theme="dark"] .profile-2fa-qr-img {
+    background: var(--hr-gray-100);
+}
+
+.profile-2fa-codes-box {
+    flex: 1;
+    min-width: 200px;
+}
+
+.profile-2fa-setup .profile-2fa-secret-box,
+.profile-2fa-setup .profile-2fa-recovery-box {
+    margin-top: 16px;
+}
+
+.profile-2fa-setup .profile-2fa-codes-box .profile-2fa-secret-box {
+    margin-top: 0;
+}
+
+.profile-2fa-secret-label,
+.profile-2fa-recovery-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--hr-text-muted);
+    margin-bottom: 6px;
+}
+
+.profile-2fa-secret-value {
+    display: inline-block;
+    padding: 8px 12px;
+    background: var(--hr-bg-input);
+    border: 1px solid var(--hr-border);
+    border-radius: var(--hr-radius);
+    font-size: 14px;
+    letter-spacing: 0.05em;
+    margin-right: 8px;
+}
+
+.profile-copy-secret {
+    vertical-align: middle;
+}
+
+.profile-2fa-recovery-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px 24px;
+}
+
+.profile-2fa-recovery-list li code {
+    font-size: 13px;
+    padding: 4px 8px;
+    background: var(--hr-bg-input);
+    border-radius: 4px;
+}
+
+.profile-2fa-status {
+    margin: 0 0 12px;
+}
+
 /* --- Responsive: tablet and up --- */
 @media (min-width: 768px) {
     .profile-header {

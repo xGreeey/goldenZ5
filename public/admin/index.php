@@ -9,6 +9,10 @@
  */
 declare(strict_types=1);
 
+if (ob_get_level() === 0) {
+    ob_start();
+}
+
 $adminRoot = __DIR__;
 $appRoot = dirname(__DIR__, 2);
 
@@ -53,6 +57,13 @@ $current_user['department'] = $_SESSION['department'] ?? $current_user['departme
 // Base URL for admin (no trailing slash)
 $base_url = '/admin';
 $assets_url = $base_url . '/assets';
+
+// Profile POST: update personal/account/security/2FA then redirect
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && $page === 'profile') {
+    $profile_user_id = (int) (AuthMiddleware::user()['id'] ?? 0);
+    $profile_base_url = $base_url;
+    require $adminRoot . '/../shared/profile-handle-post.php';
+}
 
 // Page content file
 $page_file = $adminRoot . '/pages/' . $page . '.php';

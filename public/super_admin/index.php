@@ -9,6 +9,10 @@
  */
 declare(strict_types=1);
 
+if (ob_get_level() === 0) {
+    ob_start();
+}
+
 $saRoot = __DIR__;
 $appRoot = dirname(__DIR__, 2);
 
@@ -67,6 +71,13 @@ $_SESSION['permissions'] = $user_permissions;
 
 $base_url = '/super_admin';
 $assets_url = $base_url . '/assets';
+
+// Profile POST: update personal/account/security/2FA then redirect
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && $page === 'profile') {
+    $profile_user_id = (int) (AuthMiddleware::user()['id'] ?? 0);
+    $profile_base_url = $base_url;
+    require $saRoot . '/../shared/profile-handle-post.php';
+}
 
 $page_file = $saRoot . '/pages/' . $page . '.php';
 if (!is_file($page_file)) {

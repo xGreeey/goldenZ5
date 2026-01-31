@@ -652,10 +652,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                                 ]);
                             }
                         } else {
-                            // Determine if this user must pass 2FA before accessing the dashboard
-                            $requires_2fa = in_array($user['role'], ['super_admin', 'admin'], true)
-                                && !empty($user['two_factor_enabled'])
-                                && !empty($user['two_factor_secret']);
+                            // Determine if this user must pass 2FA before accessing the dashboard (any role with 2FA enabled)
+                            $requires_2fa = !empty($user['two_factor_enabled']) && !empty($user['two_factor_secret']);
 
                             if ($requires_2fa) {
                                 // Store minimal user context for the 2FA step

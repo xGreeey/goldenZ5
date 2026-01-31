@@ -43,6 +43,9 @@ DirectoryIndex index.php
     # FORGOT PASSWORD route
     RewriteRule ^forgot-password/?$ forgot-password/forgot-password.php [L]
 
+    # Two-factor authentication verification (after login)
+    RewriteRule ^2fa/?$ 2fa.php [L,QSA]
+
     # Add .php extension internally for clean URLs
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
