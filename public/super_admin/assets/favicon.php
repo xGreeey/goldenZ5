@@ -3,16 +3,14 @@
  * Serves a circular SVG favicon with the logo embedded (base64).
  * Browsers often don't load external images in SVG favicons, so we embed the image.
  */
-$logoPath = __DIR__ . '/images/goldenz-logo.jpg';
-$mime = 'image/jpeg';
+// Use global logo.png from /assets/images/
+$logoPath = __DIR__ . '/../../assets/images/logo.png';
+$mime = 'image/png';
 
 if (!is_file($logoPath)) {
-    // Fallback: try parent images folder
-    $logoPath = __DIR__ . '/goldenz-logo.jpg';
-}
-if (!is_file($logoPath)) {
-    $logoPath = __DIR__ . '/images/goldenz-logo.png';
-    $mime = 'image/png';
+    // Fallback: try JPG if PNG doesn't exist
+    $logoPath = __DIR__ . '/../../assets/images/goldenz-logo.jpg';
+    $mime = 'image/jpeg';
 }
 
 header('Content-Type: image/svg+xml');

@@ -1,6 +1,6 @@
 <?php
 /**
- * Human Resource Portal — Administration, Evaluation & Assessments (alternate URL)
+ * Human Resource Portal — Hiring
  * Routes: ?page=dashboard | employees | reporting | ...
  * Middleware: Session → Auth → Role. CSRF verified on POST.
  * Human Resource portal: role humanresource (matches users.role enum in goldenz_hr.sql).

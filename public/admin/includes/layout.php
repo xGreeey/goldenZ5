@@ -1,10 +1,15 @@
 <?php
 /**
- * HR (Hiring) layout: collapsible sidebar (Untitled UI style) + main content.
+ * Admin layout: collapsible sidebar (Untitled UI style) + main content.
  * Light/dark mode via data-theme on html.
  *
  * CONVENTION: Markup only here. No inline <script> or style= ; use .js and .css files.
  */
+// Ensure csrf_token() is available
+if (!function_exists('csrf_token')) {
+    $appRoot = dirname(__DIR__, 2);
+    require_once $appRoot . '/includes/security.php';
+}
 if (!isset($page_content)) {
     $page_content = '';
 }
@@ -35,6 +40,7 @@ $page_title = $page_title ?? ucfirst(str_replace(['-', '_'], ' ', $page));
     <script src="<?php echo htmlspecialchars($assets_url); ?>/js/theme-init.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?php echo htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
     <title><?php echo htmlspecialchars($page_title); ?> · Recruitment · Golden Z-5</title>
     <!-- Single font: Inter (variables.css --hr-font). Icons: Font Awesome. -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -44,8 +50,8 @@ $page_title = $page_title ?? ucfirst(str_replace(['-', '_'], ' ', $page));
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Favicon: circular SVG with embedded logo -->
     <link rel="icon" type="image/svg+xml" href="/assets/favicon.php">
-    <link rel="icon" type="image/jpeg" href="/assets/images/goldenz-logo.jpg">
-    <link rel="apple-touch-icon" href="/assets/images/goldenz-logo.jpg">
+    <link rel="icon" type="image/png" href="/assets/images/logo.png">
+    <link rel="apple-touch-icon" href="/assets/images/logo.png">
     <!-- STYLES: single entry portal.css (variables, layout, sidebar, main, components, responsive) -->
     <link href="<?php echo htmlspecialchars($assets_url); ?>/css/portal.css" rel="stylesheet">
 </head>
@@ -229,8 +235,14 @@ $page_title = $page_title ?? ucfirst(str_replace(['-', '_'], ' ', $page));
                     <span>Device management</span>
                 </a>
                 <button type="button" class="portal-sidebar-popup-item portal-sidebar-popup-item-theme" id="themeToggle" aria-label="Toggle theme">
-                    <i class="fas fa-moon" aria-hidden="true"></i>
-                    <span>Switch theme</span>
+                    <span class="portal-theme-switch" aria-hidden="true">
+                        <span class="portal-theme-track">
+                            <span class="portal-theme-thumb"></span>
+                            <span class="portal-theme-icon portal-theme-icon-light"><i class="fas fa-sun" aria-hidden="true"></i></span>
+                            <span class="portal-theme-icon portal-theme-icon-dark"><i class="fas fa-moon" aria-hidden="true"></i></span>
+                        </span>
+                    </span>
+                    <span class="portal-theme-label">Theme</span>
                 </button>
                 <div class="portal-sidebar-popup-divider"></div>
                 <a href="/?logout=1" class="portal-sidebar-popup-item portal-sidebar-popup-item-signout">
@@ -286,12 +298,27 @@ $page_title = $page_title ?? ucfirst(str_replace(['-', '_'], ' ', $page));
                 </div>
                 <div class="portal-main-header-actions">
                     <a href="<?php echo htmlspecialchars($base_url); ?>?page=employees" class="portal-main-header-icon" aria-label="Search" title="Search"><i class="fas fa-search" aria-hidden="true"></i></a>
-                    <a href="<?php echo htmlspecialchars($base_url); ?>?page=settings#notifications" class="portal-main-header-icon" aria-label="Notifications" title="Notifications"><i class="fas fa-bell" aria-hidden="true"></i></a>
-                    <a href="<?php echo htmlspecialchars($base_url); ?>?page=personal" class="portal-main-header-icon portal-main-header-schedule" aria-label="Schedule" title="Schedule"><i class="fas fa-calendar-alt" aria-hidden="true"></i><span>Schedule</span></a>
-                    <a href="<?php echo htmlspecialchars($base_url); ?>?page=employee-add" class="portal-btn portal-btn-primary portal-main-header-cta">
-                        <i class="fas fa-plus" aria-hidden="true"></i>
-                        Add Employee
-                    </a>
+                    <div class="portal-notification-wrap">
+                        <button type="button" class="portal-main-header-icon portal-notification-trigger" id="notificationTrigger" aria-label="Notifications" title="Notifications" aria-haspopup="true" aria-expanded="false" aria-controls="notificationPopup">
+                            <i class="fas fa-bell" aria-hidden="true"></i>
+                            <span class="portal-notification-badge" id="notificationBadge" aria-hidden="true">0</span>
+                        </button>
+                        <div id="notificationPopup" class="portal-notification-popup" role="menu" aria-label="Notifications" hidden>
+                            <div class="portal-notification-popup-header">
+                                <h3 class="portal-notification-popup-title">Notifications</h3>
+                                <button type="button" class="portal-notification-popup-mark-all" id="markAllRead" aria-label="Mark all as read">Mark all as read</button>
+                            </div>
+                            <div class="portal-notification-popup-body" id="notificationList">
+                                <div class="portal-notification-empty">
+                                    <i class="fas fa-bell-slash" aria-hidden="true"></i>
+                                    <p>No new notifications</p>
+                                </div>
+                            </div>
+                            <div class="portal-notification-popup-footer">
+                                <a href="<?php echo htmlspecialchars($base_url); ?>?page=settings#notifications" class="portal-notification-popup-view-all">View all notifications</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </header>
             <div class="portal-main-content">

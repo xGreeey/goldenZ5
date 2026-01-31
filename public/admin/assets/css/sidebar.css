@@ -689,11 +689,83 @@
     outline-offset: 2px;
 }
 
-.portal-sidebar-popup-item-theme i {
-    flex-shrink: 0;
-    width: 20px;
-    text-align: center;
+/* -------------------------------------------------------------------------
+   THEME SWITCHER (Dribbble-style pill with sliding thumb)
+   ------------------------------------------------------------------------- */
+.portal-theme-switch {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+}
+
+.portal-theme-track {
+    position: relative;
+    width: 48px;
+    height: 24px;
+    border-radius: 999px;
+    padding: 3px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, #e0f2fe, #6366f1);
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.35);
+    transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+[data-theme="dark"] .portal-theme-track {
+    background: linear-gradient(135deg, #0f172a, #22c55e);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.7);
+}
+
+.portal-theme-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: #ffffff;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.45);
+    transition: transform 0.25s ease;
+}
+
+[data-theme="dark"] .portal-theme-thumb {
+    transform: translateX(20px);
+}
+
+.portal-theme-icon {
+    position: relative;
+    z-index: 1;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #facc15;
+    opacity: 1;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.portal-theme-icon-dark {
+    color: #e5e7eb;
+    opacity: 0.35;
+}
+
+[data-theme="dark"] .portal-theme-icon-light {
+    opacity: 0.2;
+    transform: translateX(-2px);
+}
+
+[data-theme="dark"] .portal-theme-icon-dark {
+    opacity: 1;
+    transform: translateX(2px);
+}
+
+.portal-theme-label {
+    font-size: 13px;
     color: var(--hr-text-sidebar-muted);
+}
 }
 
 /* Account settings button (in user popup) */

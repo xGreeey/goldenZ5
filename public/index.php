@@ -986,10 +986,10 @@ ob_end_flush();
     <meta name="csrf-token" content="<?= htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
     <title>Login</title>
     
-    <!-- Favicon: circular SVG with embedded logo (favicon.php) so logo is visible; JPG fallback -->
+    <!-- Favicon: circular SVG with embedded logo (favicon.php) so logo is visible; PNG fallback -->
     <link rel="icon" type="image/svg+xml" href="/assets/favicon.php">
-    <link rel="icon" type="image/jpeg" href="/assets/images/goldenz-logo.jpg">
-    <link rel="apple-touch-icon" href="/assets/images/goldenz-logo.jpg">
+    <link rel="icon" type="image/png" href="/assets/images/logo.png">
+    <link rel="apple-touch-icon" href="/assets/images/logo.png">
 
     <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">

@@ -18,6 +18,10 @@
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
     const userMenuTrigger = document.getElementById('userMenuTrigger');
     const userMenuPopup = document.getElementById('userMenuPopup');
+    const notificationTrigger = document.getElementById('notificationTrigger');
+    const notificationPopup = document.getElementById('notificationPopup');
+    const notificationBadge = document.getElementById('notificationBadge');
+    const markAllRead = document.getElementById('markAllRead');
     const themeToggle = document.getElementById('themeToggle');
     const html = document.documentElement;
 
@@ -372,6 +376,192 @@
             sidebar && sidebar.classList.remove('open');
             sidebarOverlay.classList.remove('visible');
         });
+    }
+
+    /* -------------------------------------------------------------------------
+       NOTIFICATION POPUP (header bell icon opens dropdown)
+       ------------------------------------------------------------------------- */
+    if (notificationTrigger && notificationPopup) {
+        function openNotificationPopup() {
+            notificationPopup.removeAttribute('hidden');
+            notificationTrigger.setAttribute('aria-expanded', 'true');
+        }
+
+        function closeNotificationPopup() {
+            notificationPopup.setAttribute('hidden', '');
+            notificationTrigger.setAttribute('aria-expanded', 'false');
+        }
+
+        // Toggle popup on trigger click
+        notificationTrigger.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (notificationPopup.hasAttribute('hidden')) {
+                openNotificationPopup();
+            } else {
+                closeNotificationPopup();
+            }
+        });
+
+        // Close when clicking outside
+        document.addEventListener('click', function (e) {
+            const target = e.target;
+            if (!notificationPopup.hasAttribute('hidden') && 
+                !notificationPopup.contains(target) && 
+                !notificationTrigger.contains(target)) {
+                closeNotificationPopup();
+            }
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !notificationPopup.hasAttribute('hidden')) {
+                closeNotificationPopup();
+                notificationTrigger.focus();
+            }
+        });
+
+        // Mark all as read handler
+        if (markAllRead) {
+            markAllRead.addEventListener('click', function (e) {
+                e.stopPropagation();
+                markNotificationRead([]); // Empty array means mark all as read
+            });
+        }
+
+        // Load notifications from database
+        function loadNotifications() {
+            const notificationList = document.getElementById('notificationList');
+            if (!notificationList) return;
+
+            // Get CSRF token
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
+            // Determine API URL based on current path
+            let apiUrl = '/admin/notifications-api.php';
+            if (window.location.pathname.includes('/human-resource')) {
+                apiUrl = '/human-resource/notifications-api.php';
+            } else if (window.location.pathname.includes('/super-admin') || window.location.pathname.includes('/super_admin')) {
+                apiUrl = '/super-admin/notifications-api.php';
+            }
+
+            fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-Token': csrfToken
+                },
+                credentials: 'same-origin'
+            })
+            .then(function (response) {
+                return response.json().then(function (data) {
+                    return { ok: response.ok, data: data };
+                }).catch(function () {
+                    return { ok: false, data: null };
+                });
+            })
+            .then(function (result) {
+                const emptyState = notificationList.querySelector('.portal-notification-empty');
+                if (!result.ok || !result.data || !result.data.success) {
+                    if (emptyState) emptyState.style.display = 'flex';
+                    if (notificationBadge) notificationBadge.textContent = '';
+                    return;
+                }
+
+                const notifications = result.data.notifications || [];
+                const unreadCount = result.data.unread_count || 0;
+
+                // Clear existing items (except empty state)
+                const existingItems = notificationList.querySelectorAll('.portal-notification-item');
+                existingItems.forEach(function (item) {
+                    item.remove();
+                });
+
+                if (notifications.length === 0) {
+                    if (emptyState) emptyState.style.display = 'flex';
+                } else {
+                    if (emptyState) emptyState.style.display = 'none';
+
+                    notifications.forEach(function (notif) {
+                        const item = document.createElement('a');
+                        item.className = 'portal-notification-item' + (notif.unread ? ' unread' : '');
+                        item.href = notif.url || '#';
+                        item.setAttribute('data-notification-id', notif.id);
+                        item.innerHTML = '<div class="portal-notification-item-icon"><i class="fas ' + (notif.icon || 'fa-bell') + '" aria-hidden="true"></i></div>' +
+                            '<div class="portal-notification-item-content">' +
+                            '<div class="portal-notification-item-title">' + (notif.title || 'Notification') + '</div>' +
+                            '<div class="portal-notification-item-message">' + (notif.message || '') + '</div>' +
+                            '<div class="portal-notification-item-time">' + (notif.time_ago || '') + '</div>' +
+                            '</div>';
+
+                        // Mark as read on click
+                        item.addEventListener('click', function (e) {
+                            if (notif.unread) {
+                                markNotificationRead([notif.id]);
+                            }
+                        });
+
+                        notificationList.appendChild(item);
+                    });
+                }
+
+                // Update badge count
+                if (notificationBadge) {
+                    notificationBadge.textContent = unreadCount > 0 ? unreadCount : '';
+                }
+            })
+            .catch(function (error) {
+                console.error('Failed to load notifications:', error);
+                const emptyState = notificationList.querySelector('.portal-notification-empty');
+                if (emptyState) emptyState.style.display = 'flex';
+                if (notificationBadge) notificationBadge.textContent = '';
+            });
+        }
+
+        // Mark notification(s) as read
+        function markNotificationRead(notificationIds) {
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
+            let apiUrl = '/admin/notifications-mark-read.php';
+            if (window.location.pathname.includes('/human-resource')) {
+                apiUrl = '/human-resource/notifications-mark-read.php';
+            } else if (window.location.pathname.includes('/super-admin') || window.location.pathname.includes('/super_admin')) {
+                apiUrl = '/super-admin/notifications-mark-read.php';
+            }
+
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-Token': csrfToken
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    action: notificationIds.length === 0 ? 'mark_all_read' : 'mark_read',
+                    notification_ids: notificationIds
+                })
+            })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                if (data.success) {
+                    // Reload notifications to update UI
+                    loadNotifications();
+                }
+            })
+            .catch(function (error) {
+                console.error('Failed to mark notifications as read:', error);
+            });
+        }
+
+        // Load notifications on page load
+        loadNotifications();
+
+        // Refresh notifications every 60 seconds
+        setInterval(loadNotifications, 60000);
     }
 
     /* -------------------------------------------------------------------------
