@@ -19,7 +19,7 @@
  * 
  * 3. ROLE-BASED DASHBOARD ACCESS (matches users.role enum in goldenz_hr.sql):
  *    - super_admin → /super-admin/dashboard
- *    - humanresource → /human-resource (Human Resource portal; only this role can access it)
+ *    - hr → /human-resource (Human Resource portal; only this role can access it)
  *    - admin → /admin (Administration portal; only this role can access it)
  *    - developer → /developer/dashboard
  *    - Sets session variables: user_id, user_role, username, name, employee_id, department
@@ -198,7 +198,7 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true && isset($_
         header('Location: /super-admin/dashboard');
         exit;
     }
-    if ($role === 'humanresource') {
+    if ($role === 'hr') {
         header('Location: /human-resource/dashboard');
         exit;
     }
@@ -325,7 +325,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
                     } elseif ($role === 'developer') {
                         header('Location: /developer/dashboard');
                         exit;
-                    } elseif ($role === 'humanresource') {
+                    } elseif ($role === 'hr') {
                         header('Location: /human-resource/dashboard');
                         exit;
                     } elseif ($role === 'admin') {
@@ -461,7 +461,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
                     } elseif ($user['role'] === 'developer') {
                         header('Location: /developer/dashboard');
                         exit;
-                    } elseif ($user['role'] === 'humanresource') {
+                    } elseif ($user['role'] === 'hr') {
                         header('Location: /human-resource/dashboard');
                         exit;
                     } elseif ($user['role'] === 'admin') {
@@ -640,8 +640,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                             exit;
                         }
                     } else {
-                        // Allowed roles for login (must match users.role enum in goldenz_hr.sql: super_admin, admin, humanresource, accounting, operation, logistics, employee, developer)
-                        if (!in_array($user['role'], ['super_admin', 'admin', 'humanresource', 'accounting', 'operation', 'logistics', 'employee', 'developer'], true)) {
+                        // Allowed roles for login (must match users.role enum: super_admin, hr, admin, accounting, operation, logistics, employee, developer)
+                        if (!in_array($user['role'], ['super_admin', 'hr', 'admin', 'accounting', 'operation', 'logistics', 'employee', 'developer'], true)) {
                             $error = 'This account role is not permitted to sign in.';
                             $debug_info[] = "Role not allowed: " . $user['role'];
                             if ($wantsJson) {
@@ -864,7 +864,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                                 }
                                 header('Location: /developer/dashboard');
                                 exit;
-                            } elseif ($user['role'] === 'humanresource') {
+                            } elseif ($user['role'] === 'hr') {
                                 $debug_info[] = "Redirecting to: /human-resource/dashboard";
                                 if ($wantsJson) {
                                     $respondJson([

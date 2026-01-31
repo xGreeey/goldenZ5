@@ -342,3 +342,68 @@
     pointer-events: none;
     opacity: 0.6;
 }
+
+/* --- Empty dashboard state (no permissions assigned) --- */
+.sadash-empty-dashboard {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    padding: 2rem;
+}
+
+.sadash-empty-state {
+    max-width: 420px;
+    text-align: center;
+    padding: 2.5rem 2rem;
+    background: var(--hr-bg-card);
+    border: 1px solid var(--hr-border);
+    border-radius: var(--hr-radius);
+    box-shadow: var(--hr-shadow);
+}
+
+.sadash-empty-icon {
+    width: 4rem;
+    height: 4rem;
+    margin: 0 auto 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--hr-neutral-light);
+    color: var(--hr-text-muted);
+    border-radius: 50%;
+    font-size: 1.75rem;
+}
+
+.sadash-empty-title {
+    margin: 0 0 0.75rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--hr-text);
+}
+
+.sadash-empty-desc {
+    margin: 0 0 0.75rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--hr-text-muted);
+}
+
+.sadash-empty-hint {
+    margin: 0 0 1.5rem;
+    font-size: 0.85rem;
+    color: var(--hr-text-muted);
+}
+
+.sadash-empty-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+}
+
+.sadash-empty-actions .portal-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}

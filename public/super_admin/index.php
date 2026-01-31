@@ -34,11 +34,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && CsrfMiddleware::verify() ==
 
 require_once $appRoot . '/config/database.php';
 require_once $appRoot . '/includes/security.php';
+require_once $appRoot . '/includes/permissions.php';
 
 $page = isset($_GET['page']) ? trim($_GET['page']) : 'dashboard';
 $page = preg_replace('/[^a-z0-9_-]/i', '', $page) ?: 'dashboard';
 
-$allowed_pages = ['dashboard', 'users'];
+$allowed_pages = ['dashboard', 'users', 'roles'];
 if (!in_array($page, $allowed_pages, true)) {
     $page = 'dashboard';
 }
@@ -47,19 +48,22 @@ $current_user = AuthMiddleware::user();
 $current_user['role'] = $_SESSION['user_role'] ?? $current_user['role'] ?? 'super_admin';
 $current_user['department'] = $_SESSION['department'] ?? $current_user['department'] ?? null;
 
-// Mock permissions for frontend RBAC. Replace with: $_SESSION['permissions'] or API call.
-$mock_permissions = [
-    'permissions.manage.system',
-    'users.manage',
-    'roles.manage',
-    'audit.view',
-    'system.settings.manage',
-    'dashboard.view.super_admin',
-    'modules.enable_disable',
-    'interview.conduct',
-    'interview.schedule',
-    'reports.view.all',
-];
+// Permissions from DB (role_permissions). Fallback to full set for super_admin if tables missing.
+$user_permissions = [];
+try {
+    $user_permissions = permissions_get_for_role($current_user['role']);
+    if ($current_user['role'] === 'super_admin' && empty($user_permissions)) {
+        $user_permissions = array_column(
+            (require $appRoot . '/config/permissions.php')['permissions'],
+            'code'
+        );
+    }
+} catch (Throwable $e) {
+    $user_permissions = ($current_user['role'] === 'super_admin')
+        ? array_column((require $appRoot . '/config/permissions.php')['permissions'], 'code')
+        : [];
+}
+$_SESSION['permissions'] = $user_permissions;
 
 $base_url = '/super_admin';
 $assets_url = $base_url . '/assets';
@@ -70,14 +74,26 @@ if (!is_file($page_file)) {
     $page = 'dashboard';
 }
 
+// Backend permission checks: require permission for page access
+if ($page === 'roles') {
+    if (!in_array('roles.manage', $user_permissions, true) && !in_array('permissions.manage.system', $user_permissions, true)) {
+        $page = 'dashboard';
+        $page_file = $saRoot . '/pages/dashboard.php';
+    }
+} elseif ($page === 'users' && !in_array('users.manage', $user_permissions, true)) {
+    $page = 'dashboard';
+    $page_file = $saRoot . '/pages/dashboard.php';
+}
+
 $page_title = match($page) {
     'users' => 'User Management',
+    'roles' => 'Roles & Permissions',
     default => 'Super Admin Dashboard',
 };
-$is_super_admin_dashboard = ($page === 'dashboard');
+$is_super_admin_dashboard = true;
 
-// Pass to layout and to dashboard page for JS permission engine
-$permissions_json = json_encode($mock_permissions);
+// Pass to layout for JS permission engine (sidebar/tab visibility)
+$permissions_json = json_encode($user_permissions);
 $current_user_json = json_encode([
     'id' => $current_user['id'] ?? null,
     'username' => $current_user['username'] ?? '',

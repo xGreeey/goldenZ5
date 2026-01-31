@@ -96,7 +96,7 @@ $current_user_json = $current_user_json ?? '{}';
                             </a>
                         </li>
                         <li class="portal-sidebar-item">
-                            <a href="<?php echo htmlspecialchars($base_url); ?>#roles" class="portal-sidebar-link <?php echo $page === 'roles' ? 'active' : ''; ?>" data-sadash-permission-any="roles.manage|permissions.manage.system">
+                            <a href="<?php echo htmlspecialchars($base_url); ?>?page=roles" class="portal-sidebar-link <?php echo $page === 'roles' ? 'active' : ''; ?>" data-sadash-permission-any="roles.manage|permissions.manage.system">
                                 <i class="fas fa-user-shield" aria-hidden="true"></i>
                                 <span class="portal-sidebar-link-text">Roles &amp; Permissions</span>
                             </a>
