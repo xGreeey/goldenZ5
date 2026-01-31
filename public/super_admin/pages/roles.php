@@ -54,6 +54,54 @@ $modules_order = (require $appRoot . '/config/permissions.php')['modules_order']
 $csrf_token = csrf_token();
 $base_url = '/super_admin';
 $permissions_migration_missing = empty($permissions_grouped);
+
+// Display names for roles (shown in UI)
+$role_display_names = [
+    'super_admin' => 'Super Admin',
+    'hr'          => 'Human Resource',
+    'admin'       => 'Admin',
+    'accounting'  => 'Accounting',
+    'operation'   => 'Operation',
+    'logistics'   => 'Logistics',
+    'employee'    => 'Employee',
+    'developer'   => 'Developer',
+];
+
+// Handle update user role & status (revoke/change role and account status)
+$role_status_message = '';
+$role_status_error = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user_role_status'])) {
+    if (!function_exists('csrf_validate')) {
+        require_once $appRoot . '/includes/security.php';
+    }
+    if (!csrf_validate()) {
+        $role_status_error = 'Invalid security token. Please refresh and try again.';
+    } else {
+        $user_id = isset($_POST['user_id']) ? (int) $_POST['user_id'] : 0;
+        $new_role = trim($_POST['new_role'] ?? '');
+        $new_status = trim($_POST['new_status'] ?? '');
+        $valid_roles = permissions_available_roles();
+        $valid_statuses = ['active', 'inactive', 'suspended'];
+        if ($user_id < 1 || !in_array($new_role, $valid_roles, true) || !in_array($new_status, $valid_statuses, true)) {
+            $role_status_error = 'Invalid user, role, or status.';
+        } else {
+            try {
+                db_execute('UPDATE users SET role = ?, status = ?, updated_at = NOW() WHERE id = ?', [$new_role, $new_status, $user_id]);
+                $role_status_message = 'User role and status updated successfully.';
+            } catch (Throwable $e) {
+                $role_status_error = 'Failed to update: ' . $e->getMessage();
+            }
+        }
+    }
+}
+
+// Fetch users for "Change role & status" section
+$users_for_roles = [];
+try {
+    $users_for_roles = db_fetch_all('SELECT id, username, name, role, status FROM users ORDER BY name, username');
+} catch (Throwable $e) {
+    $users_for_roles = [];
+}
 ?>
 
 <div class="portal-page portal-page-roles rp-panel" id="rolesPermissionsPanel">
@@ -73,6 +121,91 @@ $permissions_migration_missing = empty($permissions_grouped);
     </div>
     <?php endif; ?>
 
+    <!-- Page tabs: Change user role & status (default) | Roles -->
+    <div class="rp-page-tabs" role="tablist" aria-label="Roles & Permissions sections">
+        <button type="button" class="rp-page-tab rp-page-tab-active" id="rpPageTabUsers" role="tab" aria-selected="true" aria-controls="rpPanelUsers">
+            <i class="fas fa-user-edit" aria-hidden="true"></i>
+            Change user role &amp; status
+        </button>
+        <button type="button" class="rp-page-tab" id="rpPageTabRoles" role="tab" aria-selected="false" aria-controls="rpPanelRoles">
+            <i class="fas fa-user-shield" aria-hidden="true"></i>
+            Roles
+        </button>
+    </div>
+
+    <!-- Tab panel 1: Change user role & status (default) -->
+    <div class="rp-tab-panel rp-tab-panel-active" id="rpPanelUsers" role="tabpanel" aria-labelledby="rpPageTabUsers">
+        <div class="rp-card rp-users-card">
+            <h2 class="rp-card-title">
+                <i class="fas fa-user-edit" aria-hidden="true"></i>
+                Change user role &amp; status
+            </h2>
+            <p class="rp-users-hint">Update a user's role or account status. Changing role revokes their previous role; set status to inactive or suspended to restrict access.</p>
+            <?php if ($role_status_message): ?>
+            <div class="rp-inline-alert rp-inline-success" role="status">
+                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                <span><?php echo htmlspecialchars($role_status_message); ?></span>
+            </div>
+            <?php endif; ?>
+            <?php if ($role_status_error): ?>
+            <div class="rp-inline-alert rp-inline-error" role="alert">
+                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+                <span><?php echo htmlspecialchars($role_status_error); ?></span>
+            </div>
+            <?php endif; ?>
+            <div class="rp-users-table-wrap">
+                <table class="rp-users-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Current role</th>
+                            <th>Current status</th>
+                            <th>Change role &amp; status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($users_for_roles as $u): ?>
+                        <tr>
+                            <td>
+                                <span class="rp-user-name"><?php echo htmlspecialchars($u['name'] ?: $u['username']); ?></span>
+                                <span class="rp-user-meta"><?php echo htmlspecialchars($u['username']); ?></span>
+                            </td>
+                            <td><span class="rp-role-pill"><?php echo htmlspecialchars($role_display_names[$u['role']] ?? $u['role']); ?></span></td>
+                            <td><span class="rp-status-pill rp-status-<?php echo htmlspecialchars($u['status']); ?>"><?php echo htmlspecialchars(ucfirst($u['status'])); ?></span></td>
+                            <td>
+                                <form method="post" class="rp-inline-form" action="<?php echo htmlspecialchars($base_url); ?>?page=roles">
+                                    <?php echo csrf_field(); ?>
+                                    <input type="hidden" name="update_user_role_status" value="1">
+                                    <input type="hidden" name="user_id" value="<?php echo (int) $u['id']; ?>">
+                                    <select name="new_role" class="rp-inline-select" required aria-label="New role">
+                                        <?php foreach ($roles as $r): ?>
+                                        <option value="<?php echo htmlspecialchars($r); ?>" <?php echo $r === $u['role'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($role_display_names[$r] ?? $r); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <select name="new_status" class="rp-inline-select" required aria-label="New status">
+                                        <option value="active" <?php echo $u['status'] === 'active' ? 'selected' : ''; ?>>Active</option>
+                                        <option value="inactive" <?php echo $u['status'] === 'inactive' ? 'selected' : ''; ?>>Inactive</option>
+                                        <option value="suspended" <?php echo $u['status'] === 'suspended' ? 'selected' : ''; ?>>Suspended</option>
+                                    </select>
+                                    <button type="submit" class="portal-btn portal-btn-secondary rp-inline-btn">
+                                        <i class="fas fa-sync-alt" aria-hidden="true"></i>
+                                        Update
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php if (empty($users_for_roles)): ?>
+            <p class="rp-users-empty">No users found.</p>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <!-- Tab panel 2: Roles (permission matrix) -->
+    <div class="rp-tab-panel" id="rpPanelRoles" role="tabpanel" aria-labelledby="rpPageTabRoles" hidden>
     <div class="rp-layout">
         <!-- Left: Role list -->
         <aside class="rp-roles-col">
@@ -90,7 +223,7 @@ $permissions_migration_missing = empty($permissions_grouped);
                                 role="tab"
                                 aria-selected="<?php echo $role === 'super_admin' ? 'true' : 'false'; ?>"
                                 id="rp-tab-<?php echo htmlspecialchars($role); ?>">
-                            <span class="rp-role-badge"><?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $role))); ?></span>
+                            <span class="rp-role-badge"><?php echo htmlspecialchars($role_display_names[$role] ?? ucfirst(str_replace('_', ' ', $role))); ?></span>
                             <span class="rp-role-count" data-role-count="<?php echo htmlspecialchars($role); ?>">
                                 <?php echo count($role_permissions[$role] ?? []); ?> permissions
                             </span>
@@ -107,7 +240,7 @@ $permissions_migration_missing = empty($permissions_grouped);
                 <div class="rp-matrix-header">
                     <h2 class="rp-card-title">
                         <i class="fas fa-key" aria-hidden="true"></i>
-                        Permissions for <span id="rpSelectedRoleLabel">Super Admin</span>
+                        Permissions for <span id="rpSelectedRoleLabel"><?php echo htmlspecialchars($role_display_names['super_admin'] ?? 'Super Admin'); ?></span>
                     </h2>
                     <button type="button" class="portal-btn portal-btn-primary rp-save-btn" id="rpSaveBtn" disabled>
                         <i class="fas fa-save" aria-hidden="true"></i>
@@ -150,6 +283,75 @@ $permissions_migration_missing = empty($permissions_grouped);
                 </div>
             </div>
 
+            <!-- Change user role & status (revoke / reassign role, set account status) -->
+            <div class="rp-card rp-users-card">
+                <h3 class="rp-card-title">
+                    <i class="fas fa-user-edit" aria-hidden="true"></i>
+                    Change user role &amp; status
+                </h3>
+                <p class="rp-users-hint">Update a user's role or account status. Changing role revokes their previous role; set status to inactive or suspended to restrict access.</p>
+                <?php if ($role_status_message): ?>
+                <div class="rp-inline-alert rp-inline-success" role="status">
+                    <i class="fas fa-check-circle" aria-hidden="true"></i>
+                    <span><?php echo htmlspecialchars($role_status_message); ?></span>
+                </div>
+                <?php endif; ?>
+                <?php if ($role_status_error): ?>
+                <div class="rp-inline-alert rp-inline-error" role="alert">
+                    <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+                    <span><?php echo htmlspecialchars($role_status_error); ?></span>
+                </div>
+                <?php endif; ?>
+                <div class="rp-users-table-wrap">
+                    <table class="rp-users-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Current role</th>
+                                <th>Current status</th>
+                                <th>Change role &amp; status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($users_for_roles as $u): ?>
+                            <tr>
+                                <td>
+                                    <span class="rp-user-name"><?php echo htmlspecialchars($u['name'] ?: $u['username']); ?></span>
+                                    <span class="rp-user-meta"><?php echo htmlspecialchars($u['username']); ?></span>
+                                </td>
+                                <td><span class="rp-role-pill"><?php echo htmlspecialchars($role_display_names[$u['role']] ?? $u['role']); ?></span></td>
+                                <td><span class="rp-status-pill rp-status-<?php echo htmlspecialchars($u['status']); ?>"><?php echo htmlspecialchars(ucfirst($u['status'])); ?></span></td>
+                                <td>
+                                    <form method="post" class="rp-inline-form" action="<?php echo htmlspecialchars($base_url); ?>?page=roles">
+                                        <?php echo csrf_field(); ?>
+                                        <input type="hidden" name="update_user_role_status" value="1">
+                                        <input type="hidden" name="user_id" value="<?php echo (int) $u['id']; ?>">
+                                        <select name="new_role" class="rp-inline-select" required aria-label="New role">
+                                            <?php foreach ($roles as $r): ?>
+                                            <option value="<?php echo htmlspecialchars($r); ?>" <?php echo $r === $u['role'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($role_display_names[$r] ?? $r); ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <select name="new_status" class="rp-inline-select" required aria-label="New status">
+                                            <option value="active" <?php echo $u['status'] === 'active' ? 'selected' : ''; ?>>Active</option>
+                                            <option value="inactive" <?php echo $u['status'] === 'inactive' ? 'selected' : ''; ?>>Inactive</option>
+                                            <option value="suspended" <?php echo $u['status'] === 'suspended' ? 'selected' : ''; ?>>Suspended</option>
+                                        </select>
+                                        <button type="submit" class="portal-btn portal-btn-secondary rp-inline-btn">
+                                            <i class="fas fa-sync-alt" aria-hidden="true"></i>
+                                            Update
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?php if (empty($users_for_roles)): ?>
+                <p class="rp-users-empty">No users found.</p>
+                <?php endif; ?>
+            </div>
+
             <!-- Preview: visible tabs for selected role -->
             <div class="rp-card rp-preview-card">
                 <h3 class="rp-preview-title">
@@ -164,6 +366,7 @@ $permissions_migration_missing = empty($permissions_grouped);
             </div>
         </div>
     </div>
+    </div><!-- /.rp-tab-panel#rpPanelRoles -->
 
     <div class="rp-toast rp-toast-success" id="rpToastSuccess" role="status" aria-live="polite" hidden>
         <i class="fas fa-check-circle" aria-hidden="true"></i>
@@ -184,6 +387,7 @@ $permissions_migration_missing = empty($permissions_grouped);
     var roles = <?php echo json_encode($roles); ?>;
     var rolePermissions = <?php echo json_encode($role_permissions); ?>;
     var permissionsGrouped = <?php echo json_encode($permissions_grouped); ?>;
+    var roleDisplayNames = <?php echo json_encode($role_display_names); ?>;
 
     var selectedRole = 'super_admin';
     var roleListEl = document.getElementById('rpRoleList');
@@ -240,7 +444,7 @@ $permissions_migration_missing = empty($permissions_grouped);
 
     function setRole(role) {
         selectedRole = role;
-        selectedRoleLabel.textContent = role.replace(/_/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+        selectedRoleLabel.textContent = roleDisplayNames[role] || role.replace(/_/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
 
         roleListEl.querySelectorAll('.rp-role-btn').forEach(function(btn) {
             var isActive = btn.getAttribute('data-role') === role;
@@ -328,6 +532,27 @@ $permissions_migration_missing = empty($permissions_grouped);
 
     updatePreview();
     updateDirtyState();
+
+    // Page tabs: switch between "Change user role & status" and "Roles"
+    var pageTabUsers = document.getElementById('rpPageTabUsers');
+    var pageTabRoles = document.getElementById('rpPageTabRoles');
+    var panelUsers = document.getElementById('rpPanelUsers');
+    var panelRoles = document.getElementById('rpPanelRoles');
+    if (pageTabUsers && pageTabRoles && panelUsers && panelRoles) {
+        function showPanel(panel) {
+            var isUsers = (panel === panelUsers);
+            panelUsers.hidden = !isUsers;
+            panelRoles.hidden = isUsers;
+            panelUsers.classList.toggle('rp-tab-panel-active', isUsers);
+            panelRoles.classList.toggle('rp-tab-panel-active', !isUsers);
+            pageTabUsers.classList.toggle('rp-page-tab-active', isUsers);
+            pageTabRoles.classList.toggle('rp-page-tab-active', !isUsers);
+            pageTabUsers.setAttribute('aria-selected', isUsers ? 'true' : 'false');
+            pageTabRoles.setAttribute('aria-selected', !isUsers ? 'true' : 'false');
+        }
+        pageTabUsers.addEventListener('click', function() { showPanel(panelUsers); });
+        pageTabRoles.addEventListener('click', function() { showPanel(panelRoles); });
+    }
 })();
 </script>
 
@@ -336,6 +561,36 @@ $permissions_migration_missing = empty($permissions_grouped);
 .portal-page-roles { padding-bottom: 2rem; }
 .rp-header { margin-bottom: 1.5rem; }
 .rp-header .portal-dashboard-greeting { color: var(--hr-text-muted); font-size: 0.9rem; }
+
+/* Page tabs above content */
+.rp-page-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1.25rem;
+    border-bottom: 1px solid var(--hr-border);
+}
+.rp-page-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    background: transparent;
+    color: var(--hr-text-muted);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.rp-page-tab:hover { color: var(--hr-text); background: var(--hr-neutral-light); }
+.rp-page-tab-active {
+    color: var(--hr-text);
+    border-bottom-color: rgba(212, 175, 55, 0.8);
+}
+.rp-tab-panel { display: block; }
+.rp-tab-panel[hidden] { display: none !important; }
 
 .rp-layout {
     display: grid;
@@ -460,6 +715,70 @@ $permissions_migration_missing = empty($permissions_grouped);
 .rp-toggle-text { display: flex; flex-direction: column; gap: 0.2rem; }
 .rp-toggle-text strong { font-size: 0.9rem; color: var(--hr-text); }
 .rp-toggle-desc { font-size: 0.8rem; color: var(--hr-text-muted); }
+
+.rp-users-card { padding: 1.25rem; margin-top: 1rem; }
+.rp-users-hint { margin: 0 0 1rem 0; font-size: 0.85rem; color: var(--hr-text-muted); }
+.rp-inline-alert {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    margin-bottom: 1rem;
+    border-radius: var(--hr-radius);
+    font-size: 0.9rem;
+}
+.rp-inline-success { background: var(--hr-success-light); color: var(--hr-success-text); }
+.rp-inline-error { background: var(--hr-danger-light); color: var(--hr-danger-text); }
+.rp-users-table-wrap { overflow-x: auto; margin-top: 0.5rem; }
+.rp-users-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+.rp-users-table th {
+    text-align: left;
+    padding: 0.6rem 0.75rem;
+    background: var(--hr-neutral-light);
+    font-weight: 600;
+    color: var(--hr-text-muted);
+    border-bottom: 1px solid var(--hr-border);
+}
+.rp-users-table td {
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--hr-border);
+    vertical-align: middle;
+}
+.rp-user-name { display: block; font-weight: 500; color: var(--hr-text); }
+.rp-user-meta { display: block; font-size: 0.8rem; color: var(--hr-text-muted); margin-top: 0.15rem; }
+.rp-role-pill {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    background: rgba(212, 175, 55, 0.15);
+    color: var(--hr-text);
+    border-radius: var(--hr-radius);
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+.rp-status-pill {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--hr-radius);
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+.rp-status-active { background: var(--hr-success-light); color: var(--hr-success-text); }
+.rp-status-inactive { background: var(--hr-warning-light); color: var(--hr-warning-text); }
+.rp-status-suspended { background: var(--hr-danger-light); color: var(--hr-danger-text); }
+.rp-inline-form { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.rp-inline-select {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--hr-border);
+    border-radius: var(--hr-radius);
+    font-size: 0.85rem;
+    min-width: 120px;
+}
+.rp-inline-btn { flex-shrink: 0; padding: 0.4rem 0.75rem; font-size: 0.85rem; }
+.rp-users-empty { margin: 0.75rem 0; font-size: 0.9rem; color: var(--hr-text-muted); }
 
 .rp-preview-card { padding: 1.25rem; margin-top: 1rem; }
 .rp-preview-title {
