@@ -54,6 +54,9 @@ $page_title = $page_title ?? ucfirst(str_replace(['-', '_'], ' ', $page));
     <link rel="apple-touch-icon" href="/assets/images/logo.png">
     <!-- STYLES: single entry portal.css (variables, layout, sidebar, main, components, responsive) -->
     <link href="<?php echo htmlspecialchars($assets_url); ?>/css/portal.css" rel="stylesheet">
+    <?php if (isset($page) && $page === 'profile'): ?>
+    <link href="/assets/css/profile.css" rel="stylesheet">
+    <?php endif; ?>
 </head>
 <body class="portal-body">
     <div class="portal-app">
@@ -221,7 +224,7 @@ $page_title = $page_title ?? ucfirst(str_replace(['-', '_'], ' ', $page));
                     </a>
                 </div>
                 <div class="portal-sidebar-popup-divider"></div>
-                <a href="<?php echo htmlspecialchars($base_url); ?>?page=settings" class="portal-sidebar-popup-item">
+                <a href="<?php echo htmlspecialchars($base_url); ?>?page=profile" class="portal-sidebar-popup-item">
                     <i class="fas fa-user" aria-hidden="true"></i>
                     <span>My profile</span>
                 </a>
@@ -264,7 +267,7 @@ $page_title = $page_title ?? ucfirst(str_replace(['-', '_'], ' ', $page));
                         <i class="fas fa-times" aria-hidden="true"></i>
                     </button>
                 </div>
-                <a href="<?php echo htmlspecialchars($base_url); ?>?page=settings" class="portal-sidebar-popup-item">
+                <a href="<?php echo htmlspecialchars($base_url); ?>?page=profile" class="portal-sidebar-popup-item">
                     <i class="fas fa-user-circle" aria-hidden="true"></i>
                     <span>Profile</span>
                 </a>
@@ -328,5 +331,8 @@ $page_title = $page_title ?? ucfirst(str_replace(['-', '_'], ' ', $page));
     </div>
     <!-- SCRIPTS: sidebar collapse, theme toggle, mobile menu, submenu expand -->
     <script src="<?php echo htmlspecialchars($assets_url); ?>/js/portal.js"></script>
+    <?php if (isset($page) && $page === 'profile'): ?>
+    <script src="/assets/js/profile.js"></script>
+    <?php endif; ?>
 </body>
 </html>

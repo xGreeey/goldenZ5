@@ -24,6 +24,7 @@ DirectoryIndex index.php
 
     # Admin (administration, evaluation & assessments) clean routes
     RewriteRule ^admin/?$ admin/index.php [L]
+    RewriteRule ^admin/profile-post/?$ admin/profile-post.php [L,QSA]
     RewriteRule ^admin/([^/]+)/?$ admin/index.php?page=$1 [L,QSA]
 
     # HR (hiring) clean routes
@@ -34,14 +35,19 @@ DirectoryIndex index.php
     RewriteRule ^super-admin/?$ super_admin/index.php [L]
     RewriteRule ^super-admin/([^/]+)/?$ super_admin/index.php?page=$1 [L,QSA]
     RewriteRule ^super_admin/?$ super_admin/index.php [L]
+    RewriteRule ^super_admin/profile-post/?$ super_admin/profile-post.php [L,QSA]
     RewriteRule ^super_admin/([^/]+)/?$ super_admin/index.php?page=$1 [L,QSA]
 
     # HUMAN RESOURCE clean routes (hr, hr_admin, employee, etc.)
     RewriteRule ^human-resource/?$ human-resource/index.php [L]
+    RewriteRule ^human-resource/profile-post/?$ human-resource/profile-post.php [L,QSA]
     RewriteRule ^human-resource/([^/]+)/?$ human-resource/index.php?page=$1 [L,QSA]
 
     # FORGOT PASSWORD route
     RewriteRule ^forgot-password/?$ forgot-password/forgot-password.php [L]
+
+    # Two-factor authentication verification (after login)
+    RewriteRule ^2fa/?$ 2fa.php [L,QSA]
 
     # Add .php extension internally for clean URLs
     RewriteCond %{REQUEST_FILENAME} !-f

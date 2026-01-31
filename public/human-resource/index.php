@@ -9,6 +9,10 @@
  */
 declare(strict_types=1);
 
+if (ob_get_level() === 0) {
+    ob_start();
+}
+
 $hrAdminRoot = __DIR__;
 $appRoot = dirname(__DIR__, 2);
 
@@ -41,7 +45,7 @@ require_once $appRoot . '/includes/security.php';
 $page = isset($_GET['page']) ? trim($_GET['page']) : 'dashboard';
 $page = preg_replace('/[^a-z0-9_-]/i', '', $page) ?: 'dashboard';
 
-$allowed_pages = ['dashboard', 'personal', 'employees', 'employee-add', 'employee-view', 'employee-edit', 'documents', 'reporting', 'posts', 'tasks', 'settings'];
+$allowed_pages = ['dashboard', 'personal', 'employees', 'employee-add', 'employee-view', 'employee-edit', 'documents', 'reporting', 'posts', 'tasks', 'settings', 'profile'];
 if (!in_array($page, $allowed_pages, true)) {
     $page = 'dashboard';
 }
@@ -52,6 +56,15 @@ $current_user['department'] = $_SESSION['department'] ?? $current_user['departme
 
 $base_url = '/human-resource';
 $assets_url = $base_url . '/assets';
+
+// Profile POST: update personal/account/security/2FA then redirect
+$is_profile_post = (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST')
+    && ($page === 'profile' || isset($_POST['profile_section']) || !empty($_POST['_2fa_disable']));
+if ($is_profile_post) {
+    $profile_user_id = (int) (AuthMiddleware::user()['id'] ?? 0);
+    $profile_base_url = $base_url;
+    require $hrAdminRoot . '/../shared/profile-handle-post.php';
+}
 
 $page_file = $hrAdminRoot . '/pages/' . $page . '.php';
 if (!is_file($page_file)) {

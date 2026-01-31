@@ -1,0 +1,405 @@
+/**
+ * My Profile — shared profile page styles (all roles).
+ * Uses portal variables (--hr-*). Load when page=profile.
+ */
+
+.portal-page-profile {
+    padding: 0 0 32px;
+    max-width: 960px;
+}
+
+.profile-page-header {
+    margin-bottom: 24px;
+}
+
+.profile-header {
+    margin-bottom: 32px;
+    padding: 24px;
+    background: var(--hr-bg-card);
+    border: 1px solid var(--hr-border);
+    border-radius: var(--hr-radius);
+    box-shadow: var(--hr-shadow);
+}
+
+.profile-header-inner {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.profile-header-avatar {
+    flex-shrink: 0;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--hr-primary-light);
+    color: var(--hr-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+}
+
+.profile-header-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.profile-header-name {
+    margin: 0 0 8px;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--hr-text);
+    line-height: 1.25;
+}
+
+.profile-header-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.profile-header-identifier {
+    font-size: 0.9rem;
+    color: var(--hr-text-muted);
+}
+
+.profile-grid {
+    display: grid;
+    gap: 20px;
+}
+
+.profile-section-card {
+    background: var(--hr-bg-card);
+    border: 1px solid var(--hr-border);
+    border-radius: var(--hr-radius);
+    box-shadow: var(--hr-shadow);
+    padding: 20px 24px;
+}
+
+.profile-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--hr-border);
+}
+
+.profile-card-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--hr-text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile-card-body .profile-dl {
+    margin: 0;
+    display: grid;
+    gap: 8px 16px;
+}
+
+.profile-dl dt {
+    font-size: 0.85rem;
+    color: var(--hr-text-muted);
+    font-weight: 500;
+}
+
+.profile-dl dd {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--hr-text);
+}
+
+.profile-edit-hidden {
+    display: none;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--hr-border);
+}
+
+.profile-section-card.profile-section-edit .profile-edit-hidden[data-profile-edit] {
+    display: block;
+}
+
+.profile-section-card.profile-section-edit .profile-dl {
+    display: none;
+}
+
+.profile-form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.profile-2fa-setup-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin-top: 12px;
+}
+
+.profile-2fa-qr-box,
+.profile-2fa-secret-box,
+.profile-2fa-recovery-box {
+    flex-shrink: 0;
+}
+
+.profile-2fa-secret-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--hr-text-muted);
+    margin-bottom: 6px;
+}
+
+.profile-2fa-secret-value {
+    display: block;
+    font-family: monospace;
+    font-size: 14px;
+    padding: 8px 12px;
+    background: var(--hr-bg-input);
+    border: 1px solid var(--hr-border);
+    border-radius: var(--hr-radius);
+    margin-bottom: 8px;
+    word-break: break-all;
+}
+
+.profile-2fa-recovery-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px 24px;
+}
+
+.profile-2fa-recovery-list li code {
+    font-size: 13px;
+    padding: 4px 8px;
+    background: var(--hr-bg-input);
+    border-radius: 4px;
+}
+
+/* Two-factor status line: under "Update your password..." in Security card; green when enabled / red when disabled */
+.profile-2fa-status-line {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 12px 0 16px;
+    padding: 10px 14px;
+    border-radius: var(--hr-radius);
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.profile-2fa-status-line.profile-2fa-status-enabled {
+    background: var(--hr-success-light);
+    color: var(--hr-success-text, var(--hr-green-800));
+    border: 1px solid var(--hr-success);
+}
+
+.profile-2fa-status-line.profile-2fa-status-enabled i {
+    color: var(--hr-success);
+}
+
+.profile-2fa-status-line.profile-2fa-status-disabled {
+    background: var(--hr-danger-light);
+    color: var(--hr-danger-text, var(--hr-red-800));
+    border: 1px solid var(--hr-danger);
+}
+
+.profile-2fa-status-line.profile-2fa-status-disabled i {
+    color: var(--hr-danger);
+}
+
+.profile-2fa-status {
+    margin: 0 0 12px;
+}
+
+.profile-permissions-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.profile-permissions-list li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 0.9rem;
+    color: var(--hr-text);
+}
+
+.profile-permission-icon {
+    color: var(--hr-success);
+    flex-shrink: 0;
+}
+
+/* Toast */
+.profile-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 20px;
+    background: var(--hr-text);
+    color: #fff;
+    border-radius: var(--hr-radius);
+    box-shadow: var(--hr-shadow);
+    z-index: 9999;
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.profile-toast-hidden {
+    opacity: 0;
+    transform: translateY(10px);
+    pointer-events: none;
+}
+
+.profile-toast-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.profile-toast-error {
+    background: var(--hr-danger);
+}
+
+.profile-toast-icon {
+    flex-shrink: 0;
+    font-size: 1.2rem;
+}
+
+/* 2FA Disable confirmation modal (replaces browser confirm) */
+.profile-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    box-sizing: border-box;
+}
+
+.profile-modal-overlay.profile-modal-hidden {
+    display: none;
+}
+
+.profile-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    cursor: pointer;
+}
+
+.profile-modal-dialog {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    background: var(--hr-bg-card);
+    border: 1px solid var(--hr-border);
+    border-radius: var(--hr-radius);
+    box-shadow: var(--hr-shadow), 0 24px 48px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+}
+
+.profile-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--hr-border);
+}
+
+.profile-modal-title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--hr-text);
+    line-height: 1.35;
+}
+
+.profile-modal-close {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: var(--hr-radius);
+    background: transparent;
+    color: var(--hr-text-muted);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.profile-modal-close:hover {
+    background: var(--hr-bg-sidebar-hover, var(--hr-gray-100));
+    color: var(--hr-text);
+}
+
+.profile-modal-body {
+    padding: 1.25rem 1.5rem;
+}
+
+.profile-modal-message {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--hr-text-muted);
+    line-height: 1.5;
+}
+
+.profile-modal-password-group {
+    margin-top: 1rem;
+}
+
+.profile-modal-password-group .portal-input {
+    width: 100%;
+    max-width: 280px;
+}
+
+.profile-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--hr-border);
+    background: var(--hr-bg-main, var(--hr-gray-50));
+}
+
+.profile-modal-footer .portal-btn-ghost:hover {
+    background: var(--hr-bg-sidebar-hover, var(--hr-gray-100));
+    color: var(--hr-text);
+}
+
+@media (min-width: 768px) {
+    .profile-dl {
+        grid-template-columns: 160px 1fr;
+    }
+}
+
+@media (min-width: 1024px) {
+    .profile-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .profile-section-card.profile-section-readonly {
+        grid-column: 1 / -1;
+    }
+}

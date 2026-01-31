@@ -9,6 +9,10 @@
  */
 declare(strict_types=1);
 
+if (ob_get_level() === 0) {
+    ob_start();
+}
+
 $saRoot = __DIR__;
 $appRoot = dirname(__DIR__, 2);
 
@@ -39,7 +43,7 @@ require_once $appRoot . '/includes/permissions.php';
 $page = isset($_GET['page']) ? trim($_GET['page']) : 'dashboard';
 $page = preg_replace('/[^a-z0-9_-]/i', '', $page) ?: 'dashboard';
 
-$allowed_pages = ['dashboard', 'users', 'roles'];
+$allowed_pages = ['dashboard', 'users', 'roles', 'profile'];
 if (!in_array($page, $allowed_pages, true)) {
     $page = 'dashboard';
 }
@@ -68,6 +72,15 @@ $_SESSION['permissions'] = $user_permissions;
 $base_url = '/super_admin';
 $assets_url = $base_url . '/assets';
 
+// Profile POST: update personal/account/security/2FA then redirect (run when page=profile or when disable form is submitted)
+$is_profile_post = (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST')
+    && ($page === 'profile' || isset($_POST['profile_section']) || !empty($_POST['_2fa_disable']));
+if ($is_profile_post) {
+    $profile_user_id = (int) (AuthMiddleware::user()['id'] ?? 0);
+    $profile_base_url = $base_url;
+    require $saRoot . '/../shared/profile-handle-post.php';
+}
+
 $page_file = $saRoot . '/pages/' . $page . '.php';
 if (!is_file($page_file)) {
     $page_file = $saRoot . '/pages/dashboard.php';
@@ -88,6 +101,7 @@ if ($page === 'roles') {
 $page_title = match($page) {
     'users' => 'User Management',
     'roles' => 'Roles & Permissions',
+    'profile' => 'My Profile',
     default => 'Super Admin Dashboard',
 };
 $is_super_admin_dashboard = true;
