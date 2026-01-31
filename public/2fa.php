@@ -2,6 +2,7 @@
 /**
  * Two-factor authentication verification (TOTP or recovery code).
  * Shown after login when user has two_factor_enabled. Completes login on success.
+ * Layout matches login and forgot-password: split panel with branded left, form right.
  */
 declare(strict_types=1);
 
@@ -26,9 +27,6 @@ if ($pending_user_id < 1) {
 }
 
 $error = '';
-$code_type = 'totp'; // totp or recovery
-$debug_2fa = isset($_GET['debug']) && $_GET['debug'] === '1';
-$debug_info = null;
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     if (CsrfMiddleware::verify() === false) {
@@ -126,48 +124,93 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             }
 
             $error = 'Invalid code. Please enter the 6-digit code from your authenticator app or a recovery code.';
-            // When debug=1 and user entered a 6-digit code, collect TOTP debug info for display
-            if ($debug_2fa && strlen($code) === 6 && ctype_digit($code)) {
-                $secretFromDb = trim((string) ($user['two_factor_secret'] ?? ''));
-                $debug_info = totp_get_debug_info($secretFromDb, $code);
-            }
         }
     }
 }
 
-$pending_username = $_SESSION['pending_2fa_username'] ?? '';
 $page_title = 'Two-factor authentication';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
     <meta name="csrf-token" content="<?php echo htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
-    <title><?php echo htmlspecialchars($page_title); ?> · Golden Z-5</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <title><?php echo htmlspecialchars($page_title); ?> – Golden Z-5</title>
+
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.php">
+    <link rel="icon" type="image/png" href="/assets/images/logo.png">
+    <link rel="apple-touch-icon" href="/assets/images/logo.png">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <link href="/assets/css/login.css" rel="stylesheet">
+    <link href="/assets/css/forgot_password.css" rel="stylesheet">
+
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
     <style>
-        .auth-form-card { max-width: 400px; }
         .twofa-code-input { font-size: 1.25rem; letter-spacing: 0.35em; text-align: center; }
         .twofa-help { font-size: 0.875rem; color: var(--text-muted); margin-top: 0.5rem; }
-        .auth-footer-link { margin-top: 1rem; text-align: center; font-size: 0.9rem; }
-        .auth-footer-link a { color: var(--gold-dark); text-decoration: none; font-weight: 500; }
-        .auth-footer-link a:hover { color: var(--gold-primary); text-decoration: underline; }
     </style>
 </head>
 <body>
-    <div class="login-page">
+    <!-- Floating Background Elements - Same as login / forgot password -->
+    <div class="floating-elements">
+        <i class="fas fa-shield-alt floating-icon shield size-xl" style="top: 18%; left: 8%; --float-duration: 32s;"></i>
+        <i class="fas fa-star floating-icon star size-lg" style="top: 68%; left: 15%; --float-duration: 28s;"></i>
+        <i class="fas fa-certificate floating-icon badge size-md" style="top: 42%; left: 12%; --float-duration: 26s;"></i>
+        <div class="floating-icon circle size-xl" style="top: 25%; left: 48%; --float-duration: 22s;"></div>
+        <i class="fas fa-user-shield floating-icon cap size-lg" style="top: 55%; left: 45%; --float-duration: 30s;"></i>
+        <div class="floating-icon circle size-lg" style="top: 78%; left: 42%; --float-duration: 24s;"></div>
+        <i class="fas fa-award floating-icon badge size-lg" style="top: 15%; left: 82%; --float-duration: 29s;"></i>
+        <i class="fas fa-star floating-icon star size-md" style="top: 48%; left: 88%; --float-duration: 27s;"></i>
+        <i class="fas fa-shield-alt floating-icon shield size-md" style="top: 72%; left: 85%; --float-duration: 25s;"></i>
+        <i class="fas fa-star floating-icon star size-sm" style="top: 8%; left: 35%; --float-duration: 26s;"></i>
+        <i class="fas fa-id-badge floating-icon badge size-sm" style="top: 88%; left: 28%; --float-duration: 28s;"></i>
+        <div class="floating-icon circle size-md" style="top: 35%; left: 92%; --float-duration: 23s;"></div>
+    </div>
+
+    <div class="login-split-container">
+        <!-- Left Branded Panel - Same as login / forgot password -->
+        <div class="login-branded-panel">
+            <div class="branded-content">
+                <img src="/assets/images/goldenz-logo.jpg" alt="Golden Z-5 Security and Investigation Agency, Inc. Logo" class="branded-logo reveal-item" onerror="this.style.display='none'">
+                <h1 class="branded-headline reveal-item">Golden Z-5 Security and Investigation Agency, Inc.</h1>
+                <p class="branded-description reveal-item">
+                    Human Resources Management System<br>
+                    Licensed by PNP-CSG-SAGSD | Registered with SEC
+                </p>
+                <button type="button" class="see-more-btn reveal-item" id="seeMoreBtn" aria-label="View system information and features">
+                    <i class="fas fa-info-circle" aria-hidden="true"></i> System Information
+                </button>
+                <div class="social-links reveal-item">
+                    <a href="mailto:goldenzfive@yahoo.com.ph" class="social-link" title="Email us">
+                        <i class="fas fa-envelope"></i>
+                    </a>
+                    <a href="https://www.facebook.com/goldenZ5SA" target="_blank" rel="noopener noreferrer" class="social-link" title="Visit our Facebook page">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Form Panel - Same position as login / forgot password -->
         <div class="login-form-panel">
-            <div class="auth-form-container">
+            <div class="auth-form-container reveal-form">
                 <div class="auth-form-card">
                     <div class="auth-header">
+                        <div class="text-center mb-4">
+                            <div class="d-inline-flex align-items-center justify-content-center mb-3 forgot-password-header-icon">
+                                <i class="fas fa-mobile-alt" aria-hidden="true"></i>
+                            </div>
+                        </div>
                         <h2 class="auth-title">Two-factor authentication</h2>
-                        <p class="auth-subtitle">Enter the 6-digit code from your authenticator app, or a recovery code</p>
+                        <p class="auth-subtitle">Enter the 6-digit code from your authenticator app, or an 8-character recovery code.</p>
                     </div>
+
                     <?php if ($error): ?>
                     <div class="alert alert-danger" role="alert">
                         <div class="alert-icon"><i class="fas fa-exclamation-circle"></i></div>
@@ -178,30 +221,10 @@ $page_title = 'Two-factor authentication';
                     </div>
                     <?php endif; ?>
 
-                    <?php if ($debug_2fa && $debug_info !== null): ?>
-                    <div class="alert twofa-debug-box" role="status" style="background: #1a1d21; color: #e2e4e8; border: 1px solid #333; padding: 1rem; margin-bottom: 1rem; font-family: monospace; font-size: 0.85rem; text-align: left;">
-                        <strong style="color: #f0ad4e;">2FA debug (remove ?debug=1 in production)</strong>
-                        <table style="width:100%; margin-top:0.5rem; border-collapse: collapse;">
-                            <tr><td style="padding:0.2rem 0.5rem 0.2rem 0;">Secret from DB</td><td>length=<?php echo (int) $debug_info['secret_length']; ?>, preview <?php echo htmlspecialchars($debug_info['secret_preview']); ?></td></tr>
-                            <tr><td style="padding:0.2rem 0.5rem 0.2rem 0;">Base32 decode</td><td><?php echo $debug_info['decode_ok'] ? 'OK' : 'FAIL'; ?><?php if ($debug_info['decode_error']): ?> — <?php echo htmlspecialchars($debug_info['decode_error']); ?><?php endif; ?></td></tr>
-                            <?php if ($debug_info['decode_ok']): ?>
-                            <tr><td style="padding:0.2rem 0.5rem 0.2rem 0;">Decoded secret</td><td><?php echo (int) $debug_info['decoded_bytes']; ?> bytes</td></tr>
-                            <?php endif; ?>
-                            <tr><td style="padding:0.2rem 0.5rem 0.2rem 0;">Server time (UTC)</td><td><?php echo htmlspecialchars($debug_info['server_time_utc']); ?> (slice <?php echo (int) $debug_info['time_slice']; ?>)</td></tr>
-                            <tr><td style="padding:0.2rem 0.5rem 0.2rem 0;">Code you entered</td><td><strong><?php echo htmlspecialchars($debug_info['code_entered']); ?></strong></td></tr>
-                            <?php if ($debug_info['expected_current'] !== null): ?>
-                            <tr><td style="padding:0.2rem 0.5rem 0.2rem 0;">Expected (current)</td><td><?php echo htmlspecialchars($debug_info['expected_current']); ?><?php if ($debug_info['code_matches_current']): ?> <span style="color:#5cb85c;">✓ matches</span><?php endif; ?></td></tr>
-                            <tr><td style="padding:0.2rem 0.5rem 0.2rem 0;">Expected (prev 30s)</td><td><?php echo htmlspecialchars($debug_info['expected_prev'] ?? '-'); ?><?php if ($debug_info['code_matches_prev'] ?? false): ?> <span style="color:#5cb85c;">✓ matches</span><?php endif; ?></td></tr>
-                            <tr><td style="padding:0.2rem 0.5rem 0.2rem 0;">Expected (next 30s)</td><td><?php echo htmlspecialchars($debug_info['expected_next'] ?? '-'); ?><?php if ($debug_info['code_matches_next'] ?? false): ?> <span style="color:#5cb85c;">✓ matches</span><?php endif; ?></td></tr>
-                            <?php endif; ?>
-                        </table>
-                        <p style="margin:0.5rem 0 0 0; font-size:0.8rem; color:#999;">Compare “Expected (current)” with the code shown in Google Authenticator. If they differ, secret in DB may not match the one in the app (re-setup 2FA). If server time is wrong, sync server clock.</p>
-                    </div>
-                    <?php endif; ?>
-                    <form method="post" action="<?php echo $debug_2fa ? '/2fa?debug=1' : ''; ?>" class="auth-form" id="twofaForm">
+                    <form method="post" action="" class="auth-form" id="twofaForm">
                         <?php echo csrf_field(); ?>
                         <div class="form-group">
-                            <label for="code" class="form-label">Authentication or recovery code</label>
+                            <label for="code" class="form-label">Authentication or recovery code <span class="required-indicator">*</span></label>
                             <div class="input-wrapper">
                                 <div class="input-icon"><i class="fas fa-key"></i></div>
                                 <input type="text" id="code" name="code" class="form-control twofa-code-input" inputmode="numeric" autocomplete="one-time-code" placeholder="000000" maxlength="8" autofocus required>
@@ -209,18 +232,28 @@ $page_title = 'Two-factor authentication';
                             <p class="twofa-help">6-digit code from your app, or 8-character recovery code</p>
                         </div>
                         <div class="form-submit">
-                            <button type="submit" class="btn btn-primary btn-block">Verify and continue</button>
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <span class="btn-text">Verify and continue</span>
+                            </button>
                         </div>
                     </form>
-                    <?php if ($debug_2fa && $debug_info === null): ?>
-                    <p class="twofa-help" style="margin-top:0.5rem; color: var(--gold-dark);">Debug mode: submit a code to see server-side diagnostics below.</p>
-                    <?php endif; ?>
-                    <p class="auth-footer-link">
-                        <a href="/?logout=1">Use a different account</a>
-                    </p>
+
+                    <div class="form-footer">
+                        <div class="help-text">
+                            <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                            <a href="/?logout=1" class="forgot-password-link">Use a different account</a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <footer class="forgot-password-footer">
+        <p>Golden Z-5 Security and Investigation Agency, Inc. · HR Management System</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/assets/js/login.js"></script>
 </body>
 </html>
